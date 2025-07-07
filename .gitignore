@@ -27,6 +27,8 @@
 .idea/**/dictionaries
 .idea/**/shelf
 
+application-*.yml
+
 # AWS User-specific
 .idea/**/aws.xml
 
@@ -404,6 +406,8 @@ gradle-app.setting
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+
+
 
 ### ReactNative.Linux Stack ###
 *~
