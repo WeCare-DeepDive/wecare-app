@@ -1,6 +1,9 @@
 spring:
   application:
     name: wecare
+  profiles:
+    active: dev
+
   jpa:
     show-sql: true
     properties:
@@ -12,9 +15,10 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 logging:
-  level.org:
-    hibernate:
-      type:
-        descriptor:
-          sql:
-            BasicBinder: trace
+  level:
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql:
+              BasicBinder: trace
