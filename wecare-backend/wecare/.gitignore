@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+/build/
+.gradlew
+.gradlew.bat
+
+# Java
+*.class
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.project
+.classpath
+.settings/
+
+# Logs
+*.log
+logs/
+
+# Maven (if applicable, though this is a Gradle project)
+/target/
+
+# OS generated files
+.DS_Store
+Thumbs.db
