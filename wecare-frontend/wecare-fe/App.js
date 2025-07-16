@@ -3,9 +3,8 @@ import BottomNavigation from './src/navigation/BottomNavigation';
 
 export default function App() {
   return (
-   <NavigationContainer>
-    <BottomNavigation />
-   </NavigationContainer>
+    <NavigationContainer>
+      <BottomNavigation />
+    </NavigationContainer>
   );
 }
-
