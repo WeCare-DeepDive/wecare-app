@@ -1,41 +1,83 @@
 import React from 'react';
-import { Text, View, Image, TouchableOpacity } from 'react-native';
-import Pictureframe from '../assets/pictureframe.svg';
+import { Text, View, Image, StyleSheet } from 'react-native';
+// import Pictureframe from '../../../assets/pictureframe.svg';
 
 const Header = ({ title = '', showBackButton = false, onBackPress, onBellPress, onNotificationPress }) => {
   return (
-    <View
-      className='absolute top-[54px] left-0 right-0 h-[66px] bg-purple-300 px-5 py-[14px] flex-row items-center'
-      style={{
-        shadowColor: 'rgba(0, 0, 0, 0.08)',
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 4,
-        shadowOpacity: 1,
-      }}>
-      <View className='flex-1 flex-row items-center justify-between'>
-        {/* 로고 섹션 */}
-        <View className='flex-row items-center'>
-          <Image
-            className='w-8 h-8 rounded-[24px] opacity-[0.77] mr-[6px]'
-            resizeMode='cover'
-            source={require('../assets/logo.png')}
+    <View style={styles.header}>
+      <View style={styles.headeritem}>
+        <View style={styles.logocontainer}>
+          <Image style={styles.logoIcon} 
+          resizeMode="contain" 
+          source={require('../../../assets/pictureframe.png')}
           />
-          <Text className='text-2xl leading-[38px] text-labels-primary font-bold font-nanum'>위케어</Text>
-        </View>
-
-        {/* 아이콘 섹션 */}
-        <View className='flex-row items-center space-x-5'>
-          <TouchableOpacity className='overflow-hidden' onPress={onBellPress}>
-            <Pictureframe width={24} height={24} />
-          </TouchableOpacity>
-          <TouchableOpacity className='overflow-hidden' onPress={onNotificationPress}>
-            <Pictureframe width={24} height={24} />
-          </TouchableOpacity>
-        </View>
+          <Text style={[styles.text2, styles.textTypo1]}>{title}</Text>
+      </View>
+      <View style={styles.container}>
+          {/* <Pictureframe style={styles.iconbell} width={24} height={24} />
+          <Pictureframe style={styles.iconbell} width={24} height={24} /> */}
       </View>
     </View>
+  </View>
   );
 };
+
+const styles = StyleSheet.create({
+  textTypo1: {
+    fontWeight: "700",
+    fontFamily: "NanumSquareRoundOTF"
+  },
+  logoIcon: {
+    width: 32,
+    // borderRadius: 24,
+    height: 32,
+    // opacity: 0.77
+  },
+  text2: {
+    fontSize: 24,
+    lineHeight: 38,
+    textAlign: "left",
+    color: "#000"
+  },
+  logocontainer: {
+    gap: 6,
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  iconbell: {
+    overflow: "hidden"
+  },
+  container: {
+    gap: 20,
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  headeritem: {
+    width: 353,
+    justifyContent: "space-between",
+    gap: 0,
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  header: {
+    top: 54,
+    shadowColor: "rgba(0, 0, 0, 0.08)",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowRadius: 4,
+    elevation: 4,
+    height: 66,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    backgroundColor: "#d6d8ff",
+    left: 0,
+    shadowOpacity: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    position: "absolute"
+  }
+});
 
 export default Header;
