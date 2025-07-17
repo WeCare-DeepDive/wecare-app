@@ -31,7 +31,10 @@ export const Colors = {
 };
 
 export const FontFamily = {
-  nanum: 'NanumSquareRoundOTF',
+  nanumB: 'NanumSquareRoundOTFB',
+  nanumEB: 'NanumSquareRoundOTFEB',
+  nanumL: 'NanumSquareRoundOTFL',
+  nanumR: 'NanumSquareRoundOTFR',
   pretendard: 'Pretendard',
 };
 
