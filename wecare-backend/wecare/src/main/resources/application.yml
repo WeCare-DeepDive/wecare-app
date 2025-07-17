@@ -3,7 +3,6 @@ spring:
     name: wecare
   profiles:
     active: dev
-
   jpa:
     show-sql: true
     properties:
@@ -14,6 +13,9 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+server:
+  port: 8080
+
 logging:
   level:
     org:
@@ -22,3 +24,12 @@ logging:
           descriptor:
             sql:
               BasicBinder: trace
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  override-with-generic-response: false
+  use-fqn: true
