@@ -47,7 +47,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 사용으로 세션 비활성화
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**", "/error").permitAll() // 인증 관련 및 기본 에러 경로 허용
-                        .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
+                        //.anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
+                        .anyRequest().permitAll()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
         return http.build();
