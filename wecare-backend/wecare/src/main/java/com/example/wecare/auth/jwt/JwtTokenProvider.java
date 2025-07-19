@@ -2,6 +2,7 @@ package com.example.wecare.auth.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,8 @@ public class JwtTokenProvider {
     @Value("${jwt.access-token-expiration-time}")
     private long accessTokenExpirationTime;
 
+    // Refresh Token 만료 시간 조회
+    @Getter
     @Value("${jwt.refresh-token-expiration-time}")
     private long refreshTokenExpirationTime;
 
@@ -103,11 +106,6 @@ public class JwtTokenProvider {
     // 토큰에서 사용자 ID 추출
     public String getUserIdFromToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
-    }
-
-    // Refresh Token 만료 시간 조회
-    public long getRefreshTokenExpirationTime() {
-        return refreshTokenExpirationTime;
     }
 
     // 토큰의 만료 시간 조회
