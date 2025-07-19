@@ -31,8 +31,8 @@ public class AuthService {
 
     @Transactional
     public void signUp(SignUpRequest request) {
-        if (memberRepository.findByPhone(request.getPhone()).isPresent()) {
-            throw new IllegalArgumentException("이미 등록된 전화번호입니다.");
+        if (memberRepository.findByMemberId(request.getMemberId()).isPresent()) {
+            throw new IllegalArgumentException("이미 등록된 아이디입니다.");
         }
 
         Member member = new Member();
@@ -40,7 +40,7 @@ public class AuthService {
         member.setName(request.getName());
         member.setGender(request.getGender());
         member.setBirthDate(request.getBirthDate());
-        member.setPhone(request.getPhone());
+        member.setMemberId(request.getMemberId());
         member.setRole(request.getRole());
 
         memberRepository.save(member);
@@ -48,19 +48,19 @@ public class AuthService {
 
     @Transactional
     public TokenDto login(LoginRequest loginRequest) {
-        log.info("Attempting login for phone: {}", loginRequest.getPhone());
+        log.info("memberId로 로그인 시도 중입니다: {}", loginRequest.getMemberId());
         // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
         // 이때 authentication 는 인증 여부를 확인하는 authenticated 값이 false
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.getPhone(), loginRequest.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.getMemberId(), loginRequest.getPassword());
 
         // 2. 실제 검증 (사용자 비밀번호 체크)이 이루어지는 부분
         // authenticate 매서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드가 실행
         Authentication authentication = null;
         try {
             authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-            log.info("Authentication successful for phone: {}", loginRequest.getPhone());
+            log.info("memberId의 인증이 성공했습니다: {}", loginRequest.getMemberId());
         } catch (Exception e) {
-            log.error("Authentication failed for phone: {}. Error: {}", loginRequest.getPhone(), e.getMessage());
+            log.error("memberId의 인증에 실패했습니다: {}. Error: {}", loginRequest.getMemberId(), e.getMessage());
             throw e; // 예외를 다시 던져서 컨트롤러에서 처리하도록 함
         }
 

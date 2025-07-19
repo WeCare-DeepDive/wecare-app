@@ -22,10 +22,10 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     @Transactional
-    public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
-        return memberRepository.findByPhone(phone)
+    public UserDetails loadUserByUsername(String memberId) throws UsernameNotFoundException {
+        return memberRepository.findByMemberId(memberId)
                 .map(this::createUserDetails)
-                .orElseThrow(() -> new UsernameNotFoundException(phone + " -> 데이터베이스에서 찾을 수 없습니다."));
+                .orElseThrow(() -> new UsernameNotFoundException(memberId + " -> 데이터베이스에서 찾을 수 없습니다."));
     }
 
     // DB 에 User 값이 존재한다면 UserDetails 객체로 만들어서 리턴
@@ -33,7 +33,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(member.getRole().toString());
 
         return new User(
-                String.valueOf(member.getPhone()),
+                String.valueOf(member.getMemberId()),
                 member.getPassword(),
                 Collections.singleton(grantedAuthority)
         );

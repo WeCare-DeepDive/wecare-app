@@ -46,7 +46,7 @@ class AuthServiceTest {
         authService.signUp(request);
 
         // then
-        Member foundMember = memberRepository.findByPhone("010-1234-5678").orElse(null);
+        Member foundMember = memberRepository.findByMemberId("010-1234-5678").orElse(null);
         assertThat(foundMember).isNotNull();
         assertThat(foundMember.getName()).isEqualTo("테스트");
         assertThat(foundMember.getRole()).isEqualTo(Role.GUARDIAN);
