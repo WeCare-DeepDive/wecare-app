@@ -15,8 +15,12 @@ import java.time.LocalDate;
 @Setter
 public class SignUpRequest {
 
+    @NotBlank(message = "아이디는 필수 입력 값입니다.")
+    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,20}$", message = "아이디는 6~20자, 영문, 숫자를 포함해야 합니다.")
+    private String memberId;
+
     @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
-    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).{8,}$", message = "비밀번호는 8자리 이상이어야 하며, 영어와 숫자를 포함해야 합니다.")
+    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[~!@#$%^&*()+|=])[A-Za-z\\d~!@#$%^&*()+|=]{8,20}$", message = "비밀번호는 8~20자, 영문, 숫자, 특수문자를 포함해야 합니다.")
     private String password;
 
     @NotBlank(message = "이름은 필수 입력 값입니다.")
@@ -28,11 +32,6 @@ public class SignUpRequest {
     @NotNull(message = "생년월일은 필수 입력 값입니다.")
     @Past(message = "생년월일은 과거 날짜여야 합니다.")
     private LocalDate birthDate;
-
-    // 하이픈 포함 13글자
-    @NotBlank(message = "전화번호는 필수 입력 값입니다.")
-    @Pattern(regexp = "^\\d{3}-\\d{3,4}-\\d{4}$", message = "전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)")
-    private String phone;
 
     @NotNull(message = "역할은 필수 입력 값입니다.")
     private Role role;

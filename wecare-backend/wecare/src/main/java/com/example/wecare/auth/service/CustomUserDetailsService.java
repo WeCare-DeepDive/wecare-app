@@ -21,21 +21,24 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final MemberRepository memberRepository;
 
     @Override
-    @Transactional
-    public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
-        return memberRepository.findByPhone(phone)
-                .map(this::createUserDetails)
-                .orElseThrow(() -> new UsernameNotFoundException(phone + " -> 데이터베이스에서 찾을 수 없습니다."));
+    @Transactional(readOnly = true) // 읽기 전용 트랜잭션 설정
+    public UserDetails loadUserByUsername(String memberId) throws UsernameNotFoundException {
+        return memberRepository.findByMemberId(memberId)
+                .map(this::convertToUserDetails)
+                .orElseThrow(() ->
+                        // 보안상의 이유로 상세 ID 노출 제한
+                        new UsernameNotFoundException("해당 사용자를 찾을 수 없습니다."));
     }
 
-    // DB 에 User 값이 존재한다면 UserDetails 객체로 만들어서 리턴
-    private UserDetails createUserDetails(Member member) {
-        GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(member.getRole().toString());
+    private UserDetails convertToUserDetails(Member member) {
+        // 여러 권한 확장 가능하도록 구조 변경
+        GrantedAuthority authority = new SimpleGrantedAuthority(member.getRole().name());
 
         return new User(
-                String.valueOf(member.getPhone()),
+                member.getMemberId(),
                 member.getPassword(),
-                Collections.singleton(grantedAuthority)
+                Collections.singleton(authority)
         );
     }
 }
+

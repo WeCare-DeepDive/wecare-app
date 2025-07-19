@@ -19,6 +19,9 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 50)
+    private String memberId;
+
     @Column(nullable = false, length = 100)
     private String password;
 
@@ -31,9 +34,6 @@ public class Member {
 
     @Column(nullable = false)
     private LocalDate birthDate;
-
-    @Column(nullable = false, unique = true, length = 20)
-    private String phone;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
