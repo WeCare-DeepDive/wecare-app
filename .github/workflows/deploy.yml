@@ -42,15 +42,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Network Test
-        run: |
-          echo "Testing DNS resolution..."
-          ping -c 3 mysql
-
       - name: Run tests
         working-directory: ./wecare-backend/wecare
         env:
-          DB_HOST: mysql
+          DB_HOST: localhost
           DB_USER: wecare_test
           DB_PASSWORD: wecareTest
           DB_ROOT_PASSWORD: password
