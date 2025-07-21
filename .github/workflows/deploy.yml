@@ -45,12 +45,12 @@ jobs:
       - name: Run tests
         working-directory: ./wecare-backend/wecare
         env:
-          DB_TEST_HOST: mysql
-          DB_TEST_USER: wecare_test
-          DB_TEST_PASSWORD: wecareTest
-          DB_TEST_ROOT_PASSWORD: password
-          DB_TEST_NAME: wecare_test
-          REDIS_TEST_HOST: redis
+          DB_HOST: mysql
+          DB_USER: wecare_test
+          DB_PASSWORD: wecareTest
+          DB_ROOT_PASSWORD: password
+          DB_NAME: wecare_test
+          REDIS_HOST: redis
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_ACCESS_EXP: ${{ secrets.JWT_ACCESS_EXP }}
           JWT_REFRESH_EXP: ${{ secrets.JWT_REFRESH_EXP }}
