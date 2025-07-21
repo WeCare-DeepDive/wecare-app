@@ -6,6 +6,7 @@ import com.example.wecare.auth.dto.LoginResponse;
 import com.example.wecare.auth.dto.SignUpRequest;
 import com.example.wecare.member.domain.Gender;
 import com.example.wecare.member.domain.Role;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ class AuthControllerTest {
     // 테스트용 회원가입 데이터
     private SignUpRequest validSignUpRequest;
     private LoginRequest validLoginRequest;
-
+    
     @BeforeEach
     void setUp() {
         validSignUpRequest = new SignUpRequest();
