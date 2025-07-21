@@ -4,14 +4,14 @@ spring:
     hibernate:
       ddl-auto: update
   datasource:
-    url: jdbc:mysql://$mysql:3306/wecare_test
+    url: jdbc:mysql://mysql:3306/wecare_test
     username: wecare_test
     password: wecareTest
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   data:
     redis:
-      host: ${REDIS_TEST_HOST}
+      host: redis
   sql:
     init:
       mode: always          # initialization-mode 대신 사용
