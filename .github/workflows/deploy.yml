@@ -2,7 +2,7 @@ name: CI/CD for Spring Boot
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 env:
   IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
@@ -33,16 +33,14 @@ jobs:
           echo "JWT_REFRESH_EXP=${{ secrets.JWT_REFRESH_EXP }}" >> wecare-backend/wecare/.env
 
       - name: Export env vars & run tests
-        working-directory: ./wecare-backend/wecare
         run: |
           set -a
-          source .env
+          source wecare-backend/wecare/.env
           set +a
-          ./gradlew clean test
+          ./wecare-backend/wecare/gradlew clean test
 
       - name: Build JAR
-        working-directory: ./wecare-backend/wecare
-        run: ./gradlew bootJar
+        run: ./wecare-backend/wecare/gradlew bootJar
 
       - name: Docker login
         uses: docker/login-action@v3
@@ -51,9 +49,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build & Push Docker image
-        working-directory: ./wecare-backend/wecare
         run: |
-          docker build -t $IMAGE_NAME:latest .
+          docker build -t $IMAGE_NAME:latest ./wecare-backend/wecare
           docker push $IMAGE_NAME:latest
 
       - name: Deploy to EC2
@@ -63,7 +60,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /opt/wecare/
+            cd ~/project
             echo "DB_HOST=${{ secrets.DB_HOST }}" > .env
             echo "DB_USER=${{ secrets.DB_USER }}" >> .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
