@@ -42,6 +42,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Network Test
+        run: |
+          echo "Testing DNS resolution..."
+          ping -c 3 mysql
+
       - name: Run tests
         working-directory: ./wecare-backend/wecare
         env:
