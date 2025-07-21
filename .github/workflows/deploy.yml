@@ -11,6 +11,27 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_TEST_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.DB_TEST_NAME }}
+          MYSQL_USER: ${{ secrets.DB_TEST_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_TEST_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -24,17 +45,16 @@ jobs:
       - name: Run tests
         working-directory: ./wecare-backend/wecare
         env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          DB_TEST_HOST: ${{ secrets.DB_TEST_HOST }}
+          DB_TEST_USER: ${{ secrets.DB_TEST_USER }}
+          DB_TEST_PASSWORD: ${{ secrets.DB_TEST_PASSWORD }}
+          DB_TEST_ROOT_PASSWORD: ${{ secrets.DB_TEST_ROOT_PASSWORD }}
+          DB_TEST_NAME: ${{ secrets.DB_TEST_NAME }}
+          REDIS_TEST_HOST: ${{ secrets.REDIS_TEST_HOST }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_ACCESS_EXP: ${{ secrets.JWT_ACCESS_EXP }}
           JWT_REFRESH_EXP: ${{ secrets.JWT_REFRESH_EXP }}
-        run: ./gradlew clean test
+        run: ./gradlew clean test -Dspring.profiles.active=test
 
       - name: Build JAR
         working-directory: ./wecare-backend/wecare
