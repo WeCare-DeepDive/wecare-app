@@ -39,18 +39,6 @@ class AuthControllerTest {
     private SignUpRequest validSignUpRequest;
     private LoginRequest validLoginRequest;
     
-    //환경변수 로깅
-    @BeforeAll
-    static void printEnv() {
-        System.out.println("====== ENVIRONMENT VARIABLES ======");
-        System.getenv().forEach((k, v) -> {
-            if (k.contains("DB") || k.contains("JWT") || k.contains("REDIS")) {
-                System.out.println(k + "=" + v);
-            }
-        });
-        System.out.println("===================================");
-    }
-    
     @BeforeEach
     void setUp() {
         validSignUpRequest = new SignUpRequest();
