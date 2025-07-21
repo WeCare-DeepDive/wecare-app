@@ -55,7 +55,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_ACCESS_EXP: ${{ secrets.JWT_ACCESS_EXP }}
           JWT_REFRESH_EXP: ${{ secrets.JWT_REFRESH_EXP }}
-        run: ./gradlew clean test -Dspring.profiles.active=test --stacktrace
+        run: ./gradlew clean test -Dspring.profiles.active=test --stacktrace --info
 
       - name: Build JAR
         working-directory: ./wecare-backend/wecare
