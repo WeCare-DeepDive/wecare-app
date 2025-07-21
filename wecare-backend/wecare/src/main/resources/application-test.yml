@@ -5,8 +5,8 @@ spring:
       ddl-auto: update
   datasource:
     url: jdbc:mysql://$mysql:3306/wecare_test
-    username: $wecare_test
-    password: $wecareTest
+    username: wecare_test
+    password: wecareTest
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   data:
