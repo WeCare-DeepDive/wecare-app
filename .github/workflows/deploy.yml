@@ -21,24 +21,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Create .env for test
-        run: |
-          echo "DB_HOST=${{ secrets.DB_HOST }}" > wecare-backend/wecare/.env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> wecare-backend/wecare/.env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> wecare-backend/wecare/.env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> wecare-backend/wecare/.env
-          echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> wecare-backend/wecare/.env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> wecare-backend/wecare/.env
-          echo "JWT_ACCESS_EXP=${{ secrets.JWT_ACCESS_EXP }}" >> wecare-backend/wecare/.env
-          echo "JWT_REFRESH_EXP=${{ secrets.JWT_REFRESH_EXP }}" >> wecare-backend/wecare/.env
-
-      - name: Export env vars & run tests
+      - name: Run tests
         working-directory: ./wecare-backend/wecare
-        run: |
-          set -a
-          source .env
-          set +a
-          ./gradlew clean test
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ACCESS_EXP: ${{ secrets.JWT_ACCESS_EXP }}
+          JWT_REFRESH_EXP: ${{ secrets.JWT_REFRESH_EXP }}
+        run: ./gradlew clean test
 
       - name: Build JAR
         working-directory: ./wecare-backend/wecare
