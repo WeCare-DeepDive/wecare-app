@@ -27,12 +27,8 @@ jwt:
 
 logging:
   level:
-    org:
-      hibernate:
-        type:
-          descriptor:
-            sql:
-              BasicBinder: trace
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+    org.springframework.core.env: DEBUG
 
 springdoc:
   api-docs:
