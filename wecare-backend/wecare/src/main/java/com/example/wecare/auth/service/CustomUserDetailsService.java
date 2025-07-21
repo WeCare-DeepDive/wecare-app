@@ -35,7 +35,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         GrantedAuthority authority = new SimpleGrantedAuthority(member.getRole().name());
 
         return new User(
-                member.getMemberId(),
+                String.valueOf(member.getId()), // memberId 대신 member의 id를 사용
                 member.getPassword(),
                 Collections.singleton(authority)
         );

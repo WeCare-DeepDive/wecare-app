@@ -46,4 +46,16 @@ public class Member {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "guardian_id")
+    private Member guardian;
+
+    @PrePersist
+    @PreUpdate
+    private void validateGuardianConstraint() {
+        if (this.role == Role.GUARDIAN && this.guardian != null) {
+            throw new IllegalArgumentException("보호자 역할의 회원은 다른 보호자와 연결될 수 없습니다.");
+        }
+    }
 }
