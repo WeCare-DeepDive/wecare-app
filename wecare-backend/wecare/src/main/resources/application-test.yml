@@ -16,6 +16,11 @@ spring:
       mode: always          # initialization-mode 대신 사용
       schema-locations: classpath:schema.sql
 
+jwt:
+  secret: ${JWT_SECRET}
+  refresh-token-expiration-time: ${JWT_REFRESH_EXP}
+  access-token-expiration-time: ${JWT_ACCESS_EXP}
+
 logging:
   level:
     org.springframework.jdbc.datasource.init.ScriptUtils: DEBUG
