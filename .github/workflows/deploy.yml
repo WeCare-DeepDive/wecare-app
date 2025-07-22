@@ -51,10 +51,6 @@ jobs:
           DB_ROOT_PASSWORD: password
           DB_PORT: 3306
           DB_NAME: wecare_test
-          REDIS_HOST: redis
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          JWT_ACCESS_EXP: ${{ secrets.JWT_ACCESS_EXP }}
-          JWT_REFRESH_EXP: ${{ secrets.JWT_REFRESH_EXP }}
         run: ./gradlew clean test -Dspring.profiles.active=test --stacktrace --info
 
       - name: Build JAR
