@@ -3,19 +3,19 @@ spring:
     hibernate:
       ddl-auto: update
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://localhost:3306/wecare_test
+    username: wecare_test
+    password: wecareTest
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   data:
     redis:
-      host: redis
+      host: localhost
 
 jwt:
-  secret: ${JWT_SECRET}
-  refresh-token-expiration-time: ${JWT_REFRESH_EXP}
-  access-token-expiration-time: ${JWT_ACCESS_EXP}
+  secret: qwerqwerqwerqwerqwerqwerqwerqwer
+  refresh-token-expiration-time: 360000
+  access-token-expiration-time: 3600000
 
 logging:
   level:

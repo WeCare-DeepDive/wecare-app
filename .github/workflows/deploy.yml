@@ -1,4 +1,4 @@
-name: CI/CD for Spring Boot
+name: Build and deploy
 
 on:
   push:
@@ -10,27 +10,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_DATABASE: wecare_test
-          MYSQL_USER: wecare_test
-          MYSQL_PASSWORD: wecareTest
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
-      redis:
-        image: redis:7
-        ports:
-          - 6379:6379
+    environment: wecare-backend
 
     steps:
       - name: Checkout source code
@@ -41,21 +21,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Run tests
-        working-directory: ./wecare-backend/wecare
-        env:
-          DB_HOST: localhost
-          DB_USER: wecare_test
-          DB_PASSWORD: wecareTest
-          DB_ROOT_PASSWORD: password
-          DB_PORT: 3306
-          DB_NAME: wecare_test
-          REDIS_HOST: redis
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          JWT_ACCESS_EXP: ${{ secrets.JWT_ACCESS_EXP }}
-          JWT_REFRESH_EXP: ${{ secrets.JWT_REFRESH_EXP }}
-        run: ./gradlew clean test -Dspring.profiles.active=test --stacktrace --info
 
       - name: Build JAR
         working-directory: ./wecare-backend/wecare
@@ -70,8 +35,8 @@ jobs:
       - name: Build & Push Docker image
         working-directory: ./wecare-backend/wecare
         run: |
-          docker build -t $IMAGE_NAME:latest .
-          docker push $IMAGE_NAME:latest
+          docker build -t ${{ secrets.IMAGE_NAME }}:latest .
+          docker push ${{ secrets.IMAGE_NAME }}:latest
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -82,14 +47,17 @@ jobs:
           script: |
             cd /opt/wecare/
             echo "DB_HOST=${{ secrets.DB_HOST }}" > .env
+            echo "DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}" >> .env
             echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+            echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
             echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
             echo "JWT_ACCESS_EXP=${{ secrets.JWT_ACCESS_EXP }}" >> .env
             echo "JWT_REFRESH_EXP=${{ secrets.JWT_REFRESH_EXP }}" >> .env
             echo "SPRING_PROFILES_ACTIVE=prod" >> .env
 
-            docker-compose pull
-            docker-compose up -d
+            sudo docker compose pull
+            sudo docker compose up -d
