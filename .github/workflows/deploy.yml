@@ -10,6 +10,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: wecare-backend
 
     services:
       mysql:
@@ -52,14 +53,6 @@ jobs:
           DB_PORT: 3306
           DB_NAME: wecare_test
         run: ./gradlew clean test -Dspring.profiles.active=test --stacktrace --info
-
-      - name: Echo Docker credentials (debug only!)
-        run: |
-          echo "USERNAME: $DOCKER_USERNAME"
-          echo "PASSWORD: $DOCKER_PASSWORD"
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build JAR
         working-directory: ./wecare-backend/wecare
