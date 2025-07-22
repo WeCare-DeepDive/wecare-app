@@ -8,7 +8,7 @@ env:
   IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
 
 jobs:
-  build-and-deploy:
+  build-deploy-main:
     runs-on: ubuntu-latest
     environment: wecare-backend
 
