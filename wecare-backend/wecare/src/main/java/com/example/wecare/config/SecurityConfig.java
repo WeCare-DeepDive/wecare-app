@@ -1,7 +1,7 @@
 package com.example.wecare.config;
 
 import com.example.wecare.auth.jwt.JwtAuthenticationFilter;
-import com.example.wecare.auth.jwt.JwtTokenProvider;
+import com.example.wecare.auth.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtUtil jwtUtil;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
     @Bean
@@ -50,7 +50,7 @@ public class SecurityConfig {
                         //.anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                         .anyRequest().permitAll()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
         return http.build();
     }
 
