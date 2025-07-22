@@ -4,11 +4,13 @@ CREATE TABLE members (
                          username VARCHAR(30) NOT NULL UNIQUE,
                          password VARCHAR(100) NOT NULL,
                          name VARCHAR(50) NOT NULL,
-                         gender ENUM('MALE', 'FEMALE') NOT NULL,
+                         gender VARCHAR(10) NOT NULL,
+                         role VARCHAR(10) NOT NULL,
                          birth_date DATETIME NOT NULL,
-                         role ENUM('GUARDIAN', 'DEPENDENT') NOT NULL,
                          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                         CHECK (gender IN ('MALE', 'FEMALE')),
+                         CHECK (role IN ('GUARDIAN', 'DEPENDENT'))
 );
 
 -- 2. 초대 코드 테이블 (주석 처리 - Redis 사용 예정)
@@ -16,11 +18,12 @@ CREATE TABLE members (
 --     id BIGINT AUTO_INCREMENT PRIMARY KEY,
 --     code VARCHAR(20) NOT NULL UNIQUE,
 --     inviter_id BIGINT NOT NULL,
---     role_target ENUM('GUARDIAN', 'DEPENDENT') NOT NULL,
+--     role_target VARCHAR(10) NOT NULL,
 --     is_used BOOLEAN DEFAULT FALSE,
 --     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 --     expires_at DATETIME,
---     CONSTRAINT fk_invite_codes_inviter FOREIGN KEY (inviter_id) REFERENCES members(id) ON DELETE CASCADE
+--     CONSTRAINT fk_invite_codes_inviter FOREIGN KEY (inviter_id) REFERENCES members(id) ON DELETE CASCADE,
+--     CHECK (role_target IN ('GUARDIAN', 'DEPENDENT'))
 -- );
 
 -- 3. 보호자-피보호자 연결 테이블
@@ -38,13 +41,14 @@ CREATE TABLE connections (
 CREATE TABLE routines (
                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
                           member_id BIGINT NOT NULL,
-                          type ENUM('MEDICATION', 'SUPPLEMENT', 'CUSTOM') NOT NULL,
+                          type VARCHAR(15) NOT NULL,
                           title VARCHAR(100) NOT NULL,
                           description TEXT,
                           disease VARCHAR(100),
                           shared BOOLEAN DEFAULT TRUE,
                           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                          CONSTRAINT fk_routines_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+                          CONSTRAINT fk_routines_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+                          CHECK (type IN ('MEDICATION', 'SUPPLEMENT', 'CUSTOM'))
 );
 
 -- 5. 루틴 체크 테이블
@@ -86,13 +90,14 @@ CREATE TABLE health_reports (
 CREATE TABLE prescriptions (
                                id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                member_id BIGINT NOT NULL,
-                               type ENUM('MEDICATION', 'SUPPLEMENT') NOT NULL,
+                               type VARCHAR(15) NOT NULL,
                                name VARCHAR(100) NOT NULL,
                                method TEXT,
                                start_date DATETIME,
                                end_date DATETIME,
                                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                               CONSTRAINT fk_prescriptions_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+                               CONSTRAINT fk_prescriptions_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+                               CHECK (type IN ('MEDICATION', 'SUPPLEMENT'))
 );
 
 -- 9. 만보계 테이블
@@ -110,13 +115,15 @@ CREATE TABLE pedometers (
 CREATE TABLE alerts (
                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         member_id BIGINT NOT NULL,
-                        alert_type ENUM('ROUTINE', 'SCHEDULE', 'CUSTOM') NOT NULL,
+                        alert_type VARCHAR(10) NOT NULL,
                         title VARCHAR(100),
                         content TEXT,
                         alert_time DATETIME NOT NULL,
                         repeat_flag BOOLEAN DEFAULT FALSE,
-                        sound_type ENUM('DEFAULT', 'CUSTOM') DEFAULT 'DEFAULT',
+                        sound_type VARCHAR(10) DEFAULT 'DEFAULT',
                         voice_path VARCHAR(255),
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        CONSTRAINT fk_alerts_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+                        CONSTRAINT fk_alerts_member FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
+                        CHECK (alert_type IN ('ROUTINE', 'SCHEDULE', 'CUSTOM')),
+                        CHECK (sound_type IN ('DEFAULT', 'CUSTOM'))
 );
