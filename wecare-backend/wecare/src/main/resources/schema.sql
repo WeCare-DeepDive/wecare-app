@@ -2,7 +2,7 @@
 CREATE TABLE members
 (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
-    email      VARCHAR(30)  NOT NULL UNIQUE,
+    username      VARCHAR(30)  NOT NULL UNIQUE,
     password   VARCHAR(100) NOT NULL,
     name       VARCHAR(50)  NOT NULL,
     gender     ENUM('MALE', 'FEMALE') NOT NULL,

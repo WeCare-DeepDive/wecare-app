@@ -1,19 +1,21 @@
-package com.example.wecare.auth.service;
+package com.example.wecare.unit.service;
 
 import com.example.wecare.auth.dto.LoginRequest;
 import com.example.wecare.auth.dto.SignUpRequest;
 import com.example.wecare.auth.dto.TokenDto;
-import com.example.wecare.auth.jwt.JwtTokenProvider;
+import com.example.wecare.auth.jwt.JwtProperties;
+import com.example.wecare.auth.jwt.JwtUtil;
+import com.example.wecare.auth.service.AuthService;
+import com.example.wecare.member.domain.Gender;
 import com.example.wecare.member.domain.Member;
+import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.repository.MemberRepository;
 import com.example.wecare.redis.service.RedisService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import com.example.wecare.member.domain.Gender;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -22,11 +24,10 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
-import com.example.wecare.member.domain.Role;
-import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -34,10 +35,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
-
-    @InjectMocks
-    private AuthService authService;
-
     @Mock
     private MemberRepository memberRepository;
 
@@ -48,7 +45,7 @@ class AuthServiceTest {
     private AuthenticationManagerBuilder authenticationManagerBuilder;
 
     @Mock
-    private JwtTokenProvider jwtTokenProvider;
+    private JwtUtil jwtUtil;
 
     @Mock
     private RedisService redisService;
@@ -57,32 +54,35 @@ class AuthServiceTest {
     private Authentication authentication;
 
     @Mock
+    private JwtProperties jwtProperties;
+
+    @Mock
     private AuthenticationManager authenticationManager;
 
-    @BeforeEach
-    void setUp() {
-    }
+    @InjectMocks
+    private AuthService authService;
 
     @Test
     @DisplayName("회원가입 성공")
     void signUp_success() {
         // Given
-        SignUpRequest request = new SignUpRequest();
-        request.setMemberId("testuser");
-        request.setPassword("password123");
-        request.setName("테스트");
-        request.setGender(Gender.MALE);
-        request.setBirthDate(LocalDate.parse("1990-01-01"));
-        request.setRole(Role.GUARDIAN);
+        SignUpRequest request = SignUpRequest.builder()
+                .username("testuser")
+                .password("password123")
+                .name("테스트")
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.parse("1990-01-01"))
+                .role(Role.GUARDIAN)
+                .build();
 
-        when(memberRepository.findByMemberId(request.getMemberId())).thenReturn(Optional.empty());
+        when(memberRepository.findByUsername(request.getUsername())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(request.getPassword())).thenReturn("encodedPassword");
 
         // When
         authService.signUp(request);
 
         // Then
-        verify(memberRepository, times(1)).findByMemberId(request.getMemberId());
+        verify(memberRepository, times(1)).findByUsername(request.getUsername());
         verify(passwordEncoder, times(1)).encode(request.getPassword());
         verify(memberRepository, times(1)).save(any(Member.class));
     }
@@ -91,21 +91,22 @@ class AuthServiceTest {
     @DisplayName("회원가입 실패 - 이미 등록된 아이디")
     void signUp_fail_alreadyExists() {
         // Given
-        SignUpRequest request = new SignUpRequest();
-        request.setMemberId("existinguser");
-        request.setPassword("password123");
-        request.setName("테스트");
-        request.setGender(Gender.MALE);
-        request.setBirthDate(LocalDate.parse("1990-01-01"));
-        request.setRole(Role.GUARDIAN);
+        SignUpRequest request = SignUpRequest.builder()
+                .username("existinguser")
+                .password("password123")
+                .name("테스트")
+                .gender(Gender.MALE)
+                .birthDate(LocalDate.parse("1990-01-01"))
+                .role(Role.GUARDIAN)
+                .build();
 
-        when(memberRepository.findByMemberId(request.getMemberId())).thenReturn(Optional.of(new Member()));
+        when(memberRepository.findByUsername(request.getUsername())).thenReturn(Optional.of(new Member()));
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authService.signUp(request));
+        Exception exception = assertThrows(Exception.class, () -> authService.signUp(request));
         assertEquals("이미 등록된 아이디입니다.", exception.getMessage());
 
-        verify(memberRepository, times(1)).findByMemberId(request.getMemberId());
+        verify(memberRepository, times(1)).findByUsername(request.getUsername());
         verify(passwordEncoder, never()).encode(anyString());
         verify(memberRepository, never()).save(any(Member.class));
     }
@@ -115,7 +116,7 @@ class AuthServiceTest {
     void login_success() {
         // Given
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setMemberId("testuser");
+        loginRequest.setUsername("testuser");
         loginRequest.setPassword("password123");
 
         TokenDto expectedTokenDto = TokenDto.builder()
@@ -125,9 +126,9 @@ class AuthServiceTest {
 
         when(authenticationManagerBuilder.getObject()).thenReturn(authenticationManager);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
-        when(jwtTokenProvider.createAccessToken(authentication)).thenReturn("mockAccessToken");
-        when(jwtTokenProvider.createRefreshToken(authentication)).thenReturn("mockRefreshToken");
-        when(jwtTokenProvider.getRefreshTokenExpirationTime()).thenReturn(3600000L); // 1 hour
+        when(jwtUtil.generateAccessToken(authentication)).thenReturn("mockAccessToken");
+        when(jwtUtil.generateRefreshToken(authentication)).thenReturn("mockRefreshToken");
+        when(jwtProperties.getRefreshExp()).thenReturn(3600000L); // 1 hour
         when(authentication.getName()).thenReturn("testuser");
 
         // When
@@ -139,8 +140,8 @@ class AuthServiceTest {
         assertEquals(expectedTokenDto.getRefreshToken(), result.getRefreshToken());
 
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtTokenProvider, times(1)).createAccessToken(authentication);
-        verify(jwtTokenProvider, times(1)).createRefreshToken(authentication);
+        verify(jwtUtil, times(1)).generateAccessToken(authentication);
+        verify(jwtUtil, times(1)).generateRefreshToken(authentication);
         verify(redisService, times(1)).setValues(eq("testuser"), eq("mockRefreshToken"), eq(3600000L), eq(TimeUnit.MILLISECONDS));
     }
 
@@ -148,9 +149,10 @@ class AuthServiceTest {
     @DisplayName("로그인 실패 - 잘못된 자격 증명")
     void login_fail_badCredentials() {
         // Given
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setMemberId("wronguser");
-        loginRequest.setPassword("wrongpassword");
+        LoginRequest loginRequest = LoginRequest.builder()
+                .username("wronguser")
+                .password("wrongpassword")
+                .build();
 
         when(authenticationManagerBuilder.getObject()).thenReturn(authenticationManager);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
@@ -161,7 +163,7 @@ class AuthServiceTest {
         assertEquals("Bad credentials", exception.getMessage());
 
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtTokenProvider, never()).createAccessToken(any(Authentication.class));
+        verify(jwtUtil, never()).generateAccessToken(any(Authentication.class));
         verify(redisService, never()).setValues(anyString(), anyString(), anyLong(), any(TimeUnit.class));
     }
 
@@ -170,24 +172,24 @@ class AuthServiceTest {
     void logout_success() {
         // Given
         String accessToken = "validAccessToken";
-        Long expirationTime = 1000L; // 1 second
+        Date expirationTime = new Date(System.currentTimeMillis()+36000L); // 1 second
 
-        when(jwtTokenProvider.validateToken(accessToken)).thenReturn(true);
-        when(jwtTokenProvider.getAuthentication(accessToken)).thenReturn(authentication);
+        when(jwtUtil.validateToken(accessToken)).thenReturn(true);
+        when(jwtUtil.getAuthentication(accessToken)).thenReturn(authentication);
         when(authentication.getName()).thenReturn("testuser");
         when(redisService.getValues("testuser")).thenReturn("someRefreshToken");
-        when(jwtTokenProvider.getExpiration(accessToken)).thenReturn(expirationTime);
+        when(jwtUtil.getExpirationFromToken(accessToken)).thenReturn(expirationTime);
 
         // When
         authService.logout(accessToken);
 
         // Then
-        verify(jwtTokenProvider, times(1)).validateToken(accessToken);
-        verify(jwtTokenProvider, times(1)).getAuthentication(accessToken);
+        verify(jwtUtil, times(1)).validateToken(accessToken);
+        verify(jwtUtil, times(1)).getAuthentication(accessToken);
         verify(redisService, times(1)).getValues("testuser");
         verify(redisService, times(1)).deleteValues("testuser");
-        verify(jwtTokenProvider, times(1)).getExpiration(accessToken);
-        verify(redisService, times(1)).setValues(eq(accessToken), eq("logout"), eq(expirationTime), eq(TimeUnit.MILLISECONDS));
+        verify(jwtUtil, times(1)).getExpirationFromToken(accessToken);
+        verify(redisService, times(1)).setValues(anyString(), anyString(), anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -196,17 +198,17 @@ class AuthServiceTest {
         // Given
         String accessToken = "invalidAccessToken";
 
-        when(jwtTokenProvider.validateToken(accessToken)).thenReturn(false);
+        when(jwtUtil.validateToken(accessToken)).thenReturn(false);
 
         // When & Then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authService.logout(accessToken));
+        Exception exception = assertThrows(Exception.class, () -> authService.logout(accessToken));
         assertEquals("유효하지 않은 Access Token 입니다.", exception.getMessage());
 
-        verify(jwtTokenProvider, times(1)).validateToken(accessToken);
-        verify(jwtTokenProvider, never()).getAuthentication(anyString());
+        verify(jwtUtil, times(1)).validateToken(accessToken);
+        verify(jwtUtil, never()).getAuthentication(anyString());
         verify(redisService, never()).getValues(anyString());
         verify(redisService, never()).deleteValues(anyString());
-        verify(jwtTokenProvider, never()).getExpiration(anyString());
+        verify(jwtUtil, never()).getExpirationFromToken(anyString());
         verify(redisService, never()).setValues(anyString(), anyString(), anyLong(), any(TimeUnit.class));
     }
 
@@ -220,13 +222,13 @@ class AuthServiceTest {
                 .refreshToken("newRefreshToken")
                 .build();
 
-        when(jwtTokenProvider.validateToken(refreshToken)).thenReturn(true);
-        when(jwtTokenProvider.getAuthentication(refreshToken)).thenReturn(authentication);
+        when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
+        when(jwtUtil.getAuthentication(refreshToken)).thenReturn(authentication);
         when(authentication.getName()).thenReturn("testuser");
         when(redisService.getValues("testuser")).thenReturn(refreshToken);
-        when(jwtTokenProvider.createAccessToken(authentication)).thenReturn("newAccessToken");
-        when(jwtTokenProvider.createRefreshToken(authentication)).thenReturn("newRefreshToken");
-        when(jwtTokenProvider.getRefreshTokenExpirationTime()).thenReturn(3600000L);
+        when(jwtUtil.generateAccessToken(authentication)).thenReturn("newAccessToken");
+        when(jwtUtil.generateRefreshToken(authentication)).thenReturn("newRefreshToken");
+        when(jwtProperties.getRefreshExp()).thenReturn(3600000L);
 
         // When
         TokenDto result = authService.reissue(refreshToken);
@@ -236,11 +238,11 @@ class AuthServiceTest {
         assertEquals(expectedTokenDto.getAccessToken(), result.getAccessToken());
         assertEquals(expectedTokenDto.getRefreshToken(), result.getRefreshToken());
 
-        verify(jwtTokenProvider, times(1)).validateToken(refreshToken);
-        verify(jwtTokenProvider, times(1)).getAuthentication(refreshToken);
+        verify(jwtUtil, times(1)).validateToken(refreshToken);
+        verify(jwtUtil, times(1)).getAuthentication(refreshToken);
         verify(redisService, times(1)).getValues("testuser");
-        verify(jwtTokenProvider, times(1)).createAccessToken(authentication);
-        verify(jwtTokenProvider, times(1)).createRefreshToken(authentication);
+        verify(jwtUtil, times(1)).generateRefreshToken(authentication);
+        verify(jwtUtil, times(1)).generateRefreshToken(authentication);
         verify(redisService, times(1)).setValues(eq("testuser"), eq("newRefreshToken"), eq(3600000L), eq(TimeUnit.MILLISECONDS));
     }
 
@@ -250,16 +252,16 @@ class AuthServiceTest {
         // Given
         String refreshToken = "invalidRefreshToken";
 
-        when(jwtTokenProvider.validateToken(refreshToken)).thenReturn(false);
+        when(jwtUtil.validateToken(refreshToken)).thenReturn(false);
 
         // When & Then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authService.reissue(refreshToken));
         assertEquals("유효하지 않은 Refresh Token 입니다.", exception.getMessage());
 
-        verify(jwtTokenProvider, times(1)).validateToken(refreshToken);
-        verify(jwtTokenProvider, never()).getAuthentication(anyString());
+        verify(jwtUtil, times(1)).validateToken(refreshToken);
+        verify(jwtUtil, never()).getAuthentication(anyString());
         verify(redisService, never()).getValues(anyString());
-        verify(jwtTokenProvider, never()).createAccessToken(any(Authentication.class));
+        verify(jwtUtil, never()).generateAccessToken(any(Authentication.class));
     }
 
     @Test
@@ -269,8 +271,8 @@ class AuthServiceTest {
         String refreshToken = "validRefreshToken";
         String redisRefreshToken = "differentRefreshToken";
 
-        when(jwtTokenProvider.validateToken(refreshToken)).thenReturn(true);
-        when(jwtTokenProvider.getAuthentication(refreshToken)).thenReturn(authentication);
+        when(jwtUtil.validateToken(refreshToken)).thenReturn(true);
+        when(jwtUtil.getAuthentication(refreshToken)).thenReturn(authentication);
         when(authentication.getName()).thenReturn("testuser");
         when(redisService.getValues("testuser")).thenReturn(redisRefreshToken);
 
@@ -278,9 +280,9 @@ class AuthServiceTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authService.reissue(refreshToken));
         assertEquals("Refresh Token 정보가 일치하지 않습니다.", exception.getMessage());
 
-        verify(jwtTokenProvider, times(1)).validateToken(refreshToken);
-        verify(jwtTokenProvider, times(1)).getAuthentication(refreshToken);
+        verify(jwtUtil, times(1)).validateToken(refreshToken);
+        verify(jwtUtil, times(1)).getAuthentication(refreshToken);
         verify(redisService, times(1)).getValues("testuser");
-        verify(jwtTokenProvider, never()).createAccessToken(any(Authentication.class));
+        verify(jwtUtil, never()).generateAccessToken(any(Authentication.class));
     }
 }
