@@ -11,10 +11,10 @@ import java.nio.charset.StandardCharsets;
 public class JwtProperties {
     @Value("${jwt.secret}")
     private String JWT_SECRET;
-    @Value("${jwt.access-token-expiration-time}")
-    private Long JWT_ACCESS_EXP;
     @Value("${jwt.refresh-token-expiration-time}")
     private Long JWT_REFRESH_EXP;
+    @Value("${jwt.access-token-expiration-time}")
+    private Long JWT_ACCESS_EXP;
 
     public SecretKey getSecretKey() {
         return Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));

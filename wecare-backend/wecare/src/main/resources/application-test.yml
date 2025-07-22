@@ -11,10 +11,6 @@ spring:
   data:
     redis:
       host: redis
-  sql:
-    init:
-      mode: always          # initialization-mode 대신 사용
-      schema-locations: classpath:schema.sql
 
 jwt:
   secret: ${JWT_SECRET}
