@@ -42,10 +42,10 @@ public class Member {
     private Role role;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, insertable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", insertable = false)
     private LocalDateTime updatedAt;
 }
