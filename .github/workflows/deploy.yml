@@ -86,6 +86,7 @@ jobs:
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
             echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+            echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
             echo "JWT_ACCESS_EXP=${{ secrets.JWT_ACCESS_EXP }}" >> .env
             echo "JWT_REFRESH_EXP=${{ secrets.JWT_REFRESH_EXP }}" >> .env
