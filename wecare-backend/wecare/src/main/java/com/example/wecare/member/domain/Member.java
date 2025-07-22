@@ -1,8 +1,7 @@
 package com.example.wecare.member.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -11,6 +10,9 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "members")
 public class Member {
@@ -20,7 +22,7 @@ public class Member {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
-    private String memberId;
+    private String username;
 
     @Column(nullable = false, length = 100)
     private String password;
