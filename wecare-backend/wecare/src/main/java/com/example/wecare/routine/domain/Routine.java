@@ -24,11 +24,11 @@ public class Routine {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guardian_id", nullable = false)
+    @JoinColumn(name = "guardian_id", nullable = false, foreignKey = @ForeignKey(name = "fk_routine_members_guardian_id"))
     private Member guardian;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "dependent_id", nullable = false)
+    @JoinColumn(name = "dependent_id", nullable = false, foreignKey = @ForeignKey(name = "fk_routine_members_dependent_id"))
     private Member dependent;
 
     @Enumerated(EnumType.STRING)
@@ -51,8 +51,8 @@ public class Routine {
 
     @ElementCollection(targetClass = RepeatDay.class)
     @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "routine_repeat_days", joinColumns = @JoinColumn(name = "routine_id"))
-    @Column(name = "day")
+    @CollectionTable(name = "routine_repeat_days", joinColumns = @JoinColumn(name = "routine_id", foreignKey = @ForeignKey(name = "fk_routine_repeat_days_routine_routine_id")))
+    @Column(name = "day", nullable = false)
     private List<RepeatDay> repeatDays;
 
     @OneToOne(mappedBy = "routine", cascade = CascadeType.ALL, orphanRemoval = true)

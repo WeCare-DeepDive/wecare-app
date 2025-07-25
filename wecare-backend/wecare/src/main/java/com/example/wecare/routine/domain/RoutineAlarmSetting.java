@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 @Entity
-@Table(name = "routine_alarm_setting")
+@Table(name = "routine_alarm_setting", uniqueConstraints = {@UniqueConstraint(name = "uk_routine_alarm_setting_routine_id", columnNames = "routine_id")})
 @Getter
 @Setter
 @Builder
@@ -21,7 +21,7 @@ public class RoutineAlarmSetting {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "routine_id")
+    @JoinColumn(name = "routine_id", foreignKey = @ForeignKey(name = "fk_routine_alarm_setting_routine_routine_id"))
     private Routine routine;
 
     private Integer alertBeforeStartMin;

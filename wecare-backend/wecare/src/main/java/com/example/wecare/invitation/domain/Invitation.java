@@ -17,12 +17,12 @@ public class Invitation {
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guardian_id")
+    @JoinColumn(name = "guardian_id", foreignKey = @ForeignKey(name = "fk_invitations_members_guardian_id"))
     private Member guardian;
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "dependent_id")
+    @JoinColumn(name = "dependent_id", foreignKey = @ForeignKey(name = "fk_invitations_members_dependent_id"))
     private Member dependent;
 
     @CreationTimestamp
