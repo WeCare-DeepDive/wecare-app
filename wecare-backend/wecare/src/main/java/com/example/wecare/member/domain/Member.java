@@ -1,5 +1,6 @@
 package com.example.wecare.member.domain;
 
+import com.example.wecare.invitation.domain.Invitation;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,10 +9,19 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Setter
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "members")
 public class Member {
 
@@ -47,15 +57,9 @@ public class Member {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guardian_id")
-    private Member guardian;
+    @OneToMany(mappedBy = "guardian", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Invitation> dependentConnections = new HashSet<>();
 
-    @PrePersist
-    @PreUpdate
-    private void validateGuardianConstraint() {
-        if (this.role == Role.GUARDIAN && this.guardian != null) {
-            throw new IllegalArgumentException("보호자 역할의 회원은 다른 보호자와 연결될 수 없습니다.");
-        }
-    }
+    @OneToMany(mappedBy = "dependent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Invitation> guardianConnections = new HashSet<>();
 }

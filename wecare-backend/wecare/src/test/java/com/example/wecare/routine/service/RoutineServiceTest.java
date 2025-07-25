@@ -1,5 +1,7 @@
 package com.example.wecare.routine.service;
 
+import com.example.wecare.invitation.domain.Invitation;
+import com.example.wecare.invitation.repository.InvitationRepository;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.repository.MemberRepository;
@@ -25,8 +27,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,28 +55,36 @@ class RoutineServiceTest {
     @Mock
     private SecurityContext securityContext;
 
-    private Member guardian; // 보호자
-    private Member dependent; // 피보호자 (보호자와 연결됨)
-    private Member otherMember; // 관계없는 제3자
+    @Mock
+    private InvitationRepository invitationRepository;
+
+    private Member guardian;
+    private Member dependent;
+    private Member otherMember;
 
     @BeforeEach
     void setUp() {
-        // Mock SecurityContext 설정
         SecurityContextHolder.setContext(securityContext);
 
-        // 테스트용 사용자 데이터 설정
-        guardian = new Member();
-        guardian.setId(1L);
-        guardian.setRole(Role.GUARDIAN);
+        guardian = Member.builder().id(1L).role(Role.GUARDIAN).build();
+        dependent = Member.builder().id(2L).role(Role.DEPENDENT).build();
+        otherMember = Member.builder().id(3L).role(Role.GUARDIAN).build();
 
-        dependent = new Member();
-        dependent.setId(2L);
-        dependent.setRole(Role.DEPENDENT);
-        dependent.setGuardian(guardian); // 보호자와 피보호자 연결
+        // 모든 Member 객체의 연결 Set 초기화
+        guardian.setDependentConnections(new HashSet<>());
+        guardian.setGuardianConnections(new HashSet<>());
+        dependent.setDependentConnections(new HashSet<>());
+        dependent.setGuardianConnections(new HashSet<>());
+        otherMember.setDependentConnections(new HashSet<>());
+        otherMember.setGuardianConnections(new HashSet<>());
 
-        otherMember = new Member();
-        otherMember.setId(3L);
-        otherMember.setRole(Role.GUARDIAN); // 다른 보호자
+        // Invitation 엔티티를 통해 관계 설정
+        Invitation guardianDependentConnection = new Invitation();
+        guardianDependentConnection.setGuardian(guardian);
+        guardianDependentConnection.setDependent(dependent);
+
+        guardian.getDependentConnections().add(guardianDependentConnection);
+        dependent.getGuardianConnections().add(guardianDependentConnection);
     }
 
     private void mockCurrentUser(Member member) {
@@ -160,10 +172,8 @@ class RoutineServiceTest {
     void createRoutine_Fail_WhenNotMyDependent() {
         // given
         mockCurrentUser(guardian);
-        Member anotherDependent = new Member(); // 이 피보호자는 다른 보호자와 연결됨
-        anotherDependent.setId(4L);
-        anotherDependent.setRole(Role.DEPENDENT);
-        anotherDependent.setGuardian(otherMember);
+        Member anotherDependent = Member.builder().id(4L).role(Role.DEPENDENT).build();
+        // 이 피보호자는 현재 보호자와 연결되어 있지 않음
 
         when(memberRepository.findById(anotherDependent.getId())).thenReturn(Optional.of(anotherDependent));
 
@@ -299,7 +309,7 @@ class RoutineServiceTest {
                 .title("수정된 루틴")
                 .startTime(LocalDateTime.now())
                 .repeat(false)
-                .build(); // 알림 설정 필드 없음
+                .build();
 
         // when
         routineService.updateRoutine(existingRoutine.getId(), request);

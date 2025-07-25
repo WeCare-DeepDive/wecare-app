@@ -1,5 +1,6 @@
 package com.example.wecare.routine.service;
 
+import com.example.wecare.invitation.domain.Invitation;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.repository.MemberRepository;
@@ -51,7 +52,10 @@ public class RoutineService {
             throw new IllegalArgumentException("루틴 대상은 피보호자여야 합니다.");
         }
 
-        if (dependent.getGuardian() == null || !dependent.getGuardian().getId().equals(guardian.getId())) {
+        boolean isConnected = guardian.getDependentConnections().stream()
+                .anyMatch(conn -> conn.getDependent().getId().equals(dependentId));
+
+        if (!isConnected) {
             throw new AccessDeniedException("해당 피보호자에 대한 루틴을 생성할 권한이 없습니다.");
         }
 
@@ -65,14 +69,11 @@ public class RoutineService {
                 .endTime(request.getEndTime())
                 .is_repeat(request.isRepeat())
                 .repeatDays(request.getRepeatDays())
-                
-                
-                .completed(false) // 생성 시점에는 항상 false
+                .completed(false)
                 .build();
 
         Routine savedRoutine = routineRepository.save(routine);
 
-        // 알림 설정 저장
         if (request.getAlertBeforeStartMin() != null ||
             request.getAlertBeforeEndMin() != null ||
             request.getRepeatIntervalMin() != null) {
@@ -83,7 +84,7 @@ public class RoutineService {
                 .repeatIntervalMin(request.getRepeatIntervalMin())
                 .build();
             routineAlarmSettingRepository.save(alarmSetting);
-            savedRoutine.setAlarmSetting(alarmSetting); // 루틴 엔티티에 알림 설정 연결
+            savedRoutine.setAlarmSetting(alarmSetting);
         }
 
         return convertToResponse(savedRoutine);
@@ -131,9 +132,10 @@ public class RoutineService {
         routine.setStartTime(request.getStartTime());
         routine.setEndTime(request.getEndTime());
         routine.set_repeat(request.isRepeat());
-        routine.setRepeatDays(request.getRepeatDays());
+        if (request.getRepeatDays() != null) {
+            routine.setRepeatDays(request.getRepeatDays());
+        }
 
-        // 알림 설정 업데이트
         RoutineAlarmSetting existingAlarmSetting = routine.getAlarmSetting();
         boolean hasAlarmRequest = request.getAlertBeforeStartMin() != null ||
                                   request.getAlertBeforeEndMin() != null ||
@@ -141,7 +143,6 @@ public class RoutineService {
 
         if (hasAlarmRequest) {
             if (existingAlarmSetting == null) {
-                // 새로운 알림 설정 생성
                 RoutineAlarmSetting newAlarmSetting = RoutineAlarmSetting.builder()
                     .routine(routine)
                     .alertBeforeStartMin(request.getAlertBeforeStartMin())
@@ -151,15 +152,13 @@ public class RoutineService {
                 routine.setAlarmSetting(newAlarmSetting);
                 routineAlarmSettingRepository.save(newAlarmSetting);
             } else {
-                // 기존 알림 설정 업데이트
                 existingAlarmSetting.setAlertBeforeStartMin(request.getAlertBeforeStartMin());
                 existingAlarmSetting.setAlertBeforeEndMin(request.getAlertBeforeEndMin());
                 existingAlarmSetting.setRepeatIntervalMin(request.getRepeatIntervalMin());
                 routineAlarmSettingRepository.save(existingAlarmSetting);
             }
         } else if (existingAlarmSetting != null) {
-            // 알림 설정이 요청에 없지만 기존에 존재하면 삭제
-            routine.setAlarmSetting(null); // Routine 엔티티에서 연결 해제
+            routine.setAlarmSetting(null);
             routineAlarmSettingRepository.delete(existingAlarmSetting);
         }
 
@@ -200,8 +199,13 @@ public class RoutineService {
                 .orElseThrow(() -> new IllegalArgumentException("루틴을 찾을 수 없습니다."));
         Member currentMember = getCurrentMember();
 
-        boolean isGuardian = routine.getGuardian().getId().equals(currentMember.getId());
-        boolean isDependent = routine.getDependent().getId().equals(currentMember.getId());
+        boolean isGuardian = currentMember.getRole() == Role.GUARDIAN &&
+                             currentMember.getDependentConnections().stream()
+                                     .anyMatch(conn -> conn.getDependent().getId().equals(routine.getDependent().getId()));
+
+        boolean isDependent = currentMember.getRole() == Role.DEPENDENT &&
+                              currentMember.getGuardianConnections().stream()
+                                      .anyMatch(conn -> conn.getGuardian().getId().equals(routine.getGuardian().getId()));
 
         if (!isGuardian && !isDependent) {
             throw new AccessDeniedException("해당 루틴에 접근할 권한이 없습니다.");
