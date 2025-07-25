@@ -47,18 +47,37 @@ class InvitationServiceTest {
     @Mock
     private SecurityContext securityContext;
 
+    private Member guardian;
+    private Member dependent;
+    private Member otherGuardian;
+
     @BeforeEach
     void setUp() {
         SecurityContextHolder.setContext(securityContext);
+
+        guardian = Member.builder().id(1L).role(Role.GUARDIAN).build();
+        dependent = Member.builder().id(2L).role(Role.DEPENDENT).build();
+        otherGuardian = Member.builder().id(3L).role(Role.GUARDIAN).build();
+    }
+
+    private void mockAuthentication(Member member) {
+        when(securityContext.getAuthentication()).thenReturn(new UsernamePasswordAuthenticationToken(member.getId().toString(), null));
+    }
+
+    private void mockMemberFindById(Member member) {
+        when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+    }
+
+    private void mockMemberFindByIdWithPessimisticLock(Member member) {
+        when(memberRepository.findByIdWithPessimisticLock(member.getId())).thenReturn(Optional.of(member));
     }
 
     @Test
     @DisplayName("역할에 관계없이 초대 코드 생성 성공")
     void generateInvitationCode_byAnyRole_success() {
         // given
-        Member user = Member.builder().id(1L).role(Role.GUARDIAN).build();
-        when(securityContext.getAuthentication()).thenReturn(new UsernamePasswordAuthenticationToken(user.getId().toString(), null));
-        when(memberRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        mockAuthentication(guardian);
+        mockMemberFindById(guardian);
 
         // when
         String invitationCode = invitationService.generateInvitationCode();
@@ -66,7 +85,7 @@ class InvitationServiceTest {
         // then
         assertThat(invitationCode).isNotNull();
         assertThat(invitationCode.length()).isEqualTo(8);
-        verify(redisService, times(1)).setValues(anyString(), eq(user.getId().toString()), anyLong(), any(TimeUnit.class));
+        verify(redisService, times(1)).setValues(anyString(), eq(guardian.getId().toString()), anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -74,14 +93,12 @@ class InvitationServiceTest {
     void acceptInvitationCode_dependentAcceptsGuardianCode_success() {
         // given
         String validCode = "VALID123";
-        Member guardian = Member.builder().id(1L).role(Role.GUARDIAN).build();
-        Member dependent = Member.builder().id(2L).role(Role.DEPENDENT).build();
+        mockAuthentication(dependent);
+        mockMemberFindByIdWithPessimisticLock(dependent);
+        mockMemberFindByIdWithPessimisticLock(guardian);
 
-        when(securityContext.getAuthentication()).thenReturn(new UsernamePasswordAuthenticationToken(dependent.getId().toString(), null));
-        when(memberRepository.findByIdWithPessimisticLock(dependent.getId())).thenReturn(Optional.of(dependent));
-        when(memberRepository.findByIdWithPessimisticLock(guardian.getId())).thenReturn(Optional.of(guardian));
         when(redisService.getValues("INVITE:" + validCode)).thenReturn(guardian.getId().toString());
-        when(invitationRepository.existsById(any(InvitationId.class))).thenReturn(false);
+        when(invitationRepository.existsByGuardianIdAndDependentIdAndIsActiveTrue(anyLong(), anyLong())).thenReturn(false);
 
         // when
         invitationService.acceptInvitationCode(validCode);
@@ -93,6 +110,7 @@ class InvitationServiceTest {
 
         assertThat(savedInvitation.getGuardian()).isEqualTo(guardian);
         assertThat(savedInvitation.getDependent()).isEqualTo(dependent);
+        assertThat(savedInvitation.isActive()).isTrue(); // 활성화 상태 확인
         verify(redisService, times(1)).deleteValues("INVITE:" + validCode);
     }
     
@@ -101,14 +119,12 @@ class InvitationServiceTest {
     void acceptInvitationCode_guardianAcceptsDependentCode_success() {
         // given
         String validCode = "VALID456";
-        Member guardian = Member.builder().id(1L).role(Role.GUARDIAN).build();
-        Member dependent = Member.builder().id(2L).role(Role.DEPENDENT).build();
+        mockAuthentication(guardian);
+        mockMemberFindByIdWithPessimisticLock(guardian);
+        mockMemberFindByIdWithPessimisticLock(dependent);
 
-        when(securityContext.getAuthentication()).thenReturn(new UsernamePasswordAuthenticationToken(guardian.getId().toString(), null));
-        when(memberRepository.findByIdWithPessimisticLock(guardian.getId())).thenReturn(Optional.of(guardian));
-        when(memberRepository.findByIdWithPessimisticLock(dependent.getId())).thenReturn(Optional.of(dependent));
         when(redisService.getValues("INVITE:" + validCode)).thenReturn(dependent.getId().toString());
-        when(invitationRepository.existsById(any(InvitationId.class))).thenReturn(false);
+        when(invitationRepository.existsByGuardianIdAndDependentIdAndIsActiveTrue(anyLong(), anyLong())).thenReturn(false);
 
         // when
         invitationService.acceptInvitationCode(validCode);
@@ -120,6 +136,7 @@ class InvitationServiceTest {
 
         assertThat(savedInvitation.getGuardian()).isEqualTo(guardian);
         assertThat(savedInvitation.getDependent()).isEqualTo(dependent);
+        assertThat(savedInvitation.isActive()).isTrue(); // 활성화 상태 확인
         verify(redisService, times(1)).deleteValues("INVITE:" + validCode);
     }
 
@@ -128,9 +145,9 @@ class InvitationServiceTest {
     void acceptInvitationCode_fail_withInvalidCode() {
         // given
         String invalidCode = "INVALID123";
-        Member dependent = Member.builder().id(2L).role(Role.DEPENDENT).build();
-        when(securityContext.getAuthentication()).thenReturn(new UsernamePasswordAuthenticationToken(dependent.getId().toString(), null));
-        when(memberRepository.findByIdWithPessimisticLock(dependent.getId())).thenReturn(Optional.of(dependent));
+        mockAuthentication(dependent);
+        mockMemberFindByIdWithPessimisticLock(dependent);
+
         when(redisService.getValues("INVITE:" + invalidCode)).thenReturn(null);
 
         // when & then
@@ -140,18 +157,16 @@ class InvitationServiceTest {
     }
 
     @Test
-    @DisplayName("이미 연결된 관계일 경우 수락 시도 시 실패")
-    void acceptInvitationCode_fail_whenAlreadyConnected() {
+    @DisplayName("이미 활성화된 연결이 존재할 경우 수락 시도 시 실패")
+    void acceptInvitationCode_fail_whenAlreadyActiveConnected() {
         // given
         String validCode = "VALID123";
-        Member guardian = Member.builder().id(1L).role(Role.GUARDIAN).build();
-        Member dependent = Member.builder().id(2L).role(Role.DEPENDENT).build();
+        mockAuthentication(dependent);
+        mockMemberFindByIdWithPessimisticLock(dependent);
+        mockMemberFindByIdWithPessimisticLock(guardian);
 
-        when(securityContext.getAuthentication()).thenReturn(new UsernamePasswordAuthenticationToken(dependent.getId().toString(), null));
-        when(memberRepository.findByIdWithPessimisticLock(dependent.getId())).thenReturn(Optional.of(dependent));
-        when(memberRepository.findByIdWithPessimisticLock(guardian.getId())).thenReturn(Optional.of(guardian));
         when(redisService.getValues("INVITE:" + validCode)).thenReturn(guardian.getId().toString());
-        when(invitationRepository.existsById(new InvitationId(guardian.getId(), dependent.getId()))).thenReturn(true);
+        when(invitationRepository.existsByGuardianIdAndDependentIdAndIsActiveTrue(anyLong(), anyLong())).thenReturn(true); // 활성화된 연결이 존재한다고 모의
 
         // when & then
         assertThatThrownBy(() -> invitationService.acceptInvitationCode(validCode))
@@ -164,13 +179,11 @@ class InvitationServiceTest {
     void acceptInvitationCode_fail_withSameRole() {
         // given
         String validCode = "VALID789";
-        Member guardian1 = Member.builder().id(1L).role(Role.GUARDIAN).build();
-        Member guardian2 = Member.builder().id(3L).role(Role.GUARDIAN).build();
+        mockAuthentication(guardian);
+        mockMemberFindByIdWithPessimisticLock(guardian);
+        mockMemberFindByIdWithPessimisticLock(otherGuardian);
 
-        when(securityContext.getAuthentication()).thenReturn(new UsernamePasswordAuthenticationToken(guardian1.getId().toString(), null));
-        when(memberRepository.findByIdWithPessimisticLock(guardian1.getId())).thenReturn(Optional.of(guardian1));
-        when(memberRepository.findByIdWithPessimisticLock(guardian2.getId())).thenReturn(Optional.of(guardian2));
-        when(redisService.getValues("INVITE:" + validCode)).thenReturn(guardian2.getId().toString());
+        when(redisService.getValues("INVITE:" + validCode)).thenReturn(otherGuardian.getId().toString());
 
         // when & then
         assertThatThrownBy(() -> invitationService.acceptInvitationCode(validCode))
@@ -183,15 +196,79 @@ class InvitationServiceTest {
     void acceptInvitationCode_fail_withOwnCode() {
         // given
         String ownCode = "OWNCODE1";
-        Member user = Member.builder().id(1L).role(Role.GUARDIAN).build();
+        mockAuthentication(guardian);
+        mockMemberFindByIdWithPessimisticLock(guardian);
 
-        when(securityContext.getAuthentication()).thenReturn(new UsernamePasswordAuthenticationToken(user.getId().toString(), null));
-        when(memberRepository.findByIdWithPessimisticLock(user.getId())).thenReturn(Optional.of(user));
-        when(redisService.getValues("INVITE:" + ownCode)).thenReturn(user.getId().toString());
+        when(redisService.getValues("INVITE:" + ownCode)).thenReturn(guardian.getId().toString());
 
         // when & then
         assertThatThrownBy(() -> invitationService.acceptInvitationCode(ownCode))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("자신의 초대 코드는 수락할 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("연결 삭제 성공 - isActive가 false로 변경되어야 한다.")
+    void deleteConnection_success() {
+        // given
+        mockAuthentication(guardian);
+        mockMemberFindByIdWithPessimisticLock(guardian);
+        mockMemberFindByIdWithPessimisticLock(dependent);
+
+        Invitation existingInvitation = Invitation.builder()
+                .guardian(guardian)
+                .dependent(dependent)
+                .isActive(true)
+                .build();
+
+        when(invitationRepository.findById(any(InvitationId.class))).thenReturn(Optional.of(existingInvitation));
+
+        // when
+        invitationService.deleteConnection(dependent.getId());
+
+        // then
+        ArgumentCaptor<Invitation> invitationCaptor = ArgumentCaptor.forClass(Invitation.class);
+        verify(invitationRepository, times(1)).save(invitationCaptor.capture());
+        Invitation savedInvitation = invitationCaptor.getValue();
+
+        assertThat(savedInvitation.isActive()).isFalse();
+    }
+
+    @Test
+    @DisplayName("연결 삭제 실패 - 존재하지 않는 연결")
+    void deleteConnection_fail_notExist() {
+        // given
+        mockAuthentication(guardian);
+        mockMemberFindByIdWithPessimisticLock(guardian);
+        mockMemberFindByIdWithPessimisticLock(dependent);
+
+        when(invitationRepository.findById(any(InvitationId.class))).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> invitationService.deleteConnection(dependent.getId()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("존재하지 않는 연결입니다.");
+    }
+
+    @Test
+    @DisplayName("연결 삭제 실패 - 이미 비활성화된 연결")
+    void deleteConnection_fail_alreadyInactive() {
+        // given
+        mockAuthentication(guardian);
+        mockMemberFindByIdWithPessimisticLock(guardian);
+        mockMemberFindByIdWithPessimisticLock(dependent);
+
+        Invitation existingInvitation = Invitation.builder()
+                .guardian(guardian)
+                .dependent(dependent)
+                .isActive(false) // 이미 비활성화된 상태
+                .build();
+
+        when(invitationRepository.findById(any(InvitationId.class))).thenReturn(Optional.of(existingInvitation));
+
+        // when & then
+        assertThatThrownBy(() -> invitationService.deleteConnection(dependent.getId()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이미 비활성화된 연결입니다.");
     }
 }

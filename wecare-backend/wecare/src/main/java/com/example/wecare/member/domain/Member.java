@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "members", uniqueConstraints = @UniqueConstraint(name = "uq_members_username", columnNames = {"username"}))
+@Table(name = "members", uniqueConstraints = @UniqueConstraint(name = "uk_members_username", columnNames = {"username"}))
 public class Member {
 
     @Id

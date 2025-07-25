@@ -5,4 +5,5 @@ import com.example.wecare.invitation.domain.InvitationId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface InvitationRepository extends JpaRepository<Invitation, InvitationId> {
+    boolean existsByGuardianIdAndDependentIdAndIsActiveTrue(Long guardianId, Long dependentId);
 }

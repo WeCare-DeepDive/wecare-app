@@ -78,16 +78,54 @@ public class InvitationService {
             dependent = currentUser;
         }
 
-        if (invitationRepository.existsById(new com.example.wecare.invitation.domain.InvitationId(guardian.getId(), dependent.getId()))) {
+        if (invitationRepository.existsByGuardianIdAndDependentIdAndIsActiveTrue(guardian.getId(), dependent.getId())) {
             throw new IllegalArgumentException("이미 연결된 관계입니다.");
         }
 
         Invitation newInvitation = new Invitation();
         newInvitation.setGuardian(guardian);
         newInvitation.setDependent(dependent);
+        newInvitation.setActive(true); // 명시적으로 활성화 상태로 저장
 
         invitationRepository.save(newInvitation);
 
         redisService.deleteValues(redisKey);
+    }
+
+    @Transactional
+    public void deleteConnection(Long targetUserId) {
+        Long currentUserId = getCurrentMemberId();
+        Member currentUser = memberRepository.findByIdWithPessimisticLock(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("현재 사용자를 찾을 수 없습니다."));
+
+        Member targetUser = memberRepository.findByIdWithPessimisticLock(targetUserId)
+                .orElseThrow(() -> new IllegalArgumentException("대상 사용자를 찾을 수 없습니다."));
+
+        // 연결 관계를 파악하여 guardian과 dependent를 설정
+        Member guardianInConnection;
+        Member dependentInConnection;
+
+        if (currentUser.getRole() == Role.GUARDIAN && targetUser.getRole() == Role.DEPENDENT) {
+            guardianInConnection = currentUser;
+            dependentInConnection = targetUser;
+        } else if (currentUser.getRole() == Role.DEPENDENT && targetUser.getRole() == Role.GUARDIAN) {
+            guardianInConnection = targetUser;
+            dependentInConnection = currentUser;
+        } else {
+            throw new IllegalArgumentException("보호자와 피보호자 간의 연결만 삭제할 수 있습니다.");
+        }
+
+        // Invitation 엔티티 찾기
+        Invitation invitation = invitationRepository.findById(new com.example.wecare.invitation.domain.InvitationId(guardianInConnection.getId(), dependentInConnection.getId()))
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 연결입니다."));
+
+        // 활성화된 연결인지 확인
+        if (!invitation.isActive()) {
+            throw new IllegalArgumentException("이미 비활성화된 연결입니다.");
+        }
+
+        // 소프트 삭제
+        invitation.setActive(false);
+        invitationRepository.save(invitation);
     }
 }
