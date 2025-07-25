@@ -2,8 +2,7 @@ package com.example.wecare.member.domain;
 
 import com.example.wecare.invitation.domain.Invitation;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -18,10 +17,10 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Setter
-@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 @Table(name = "members")
 public class Member {
 
@@ -30,7 +29,7 @@ public class Member {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
-    private String memberId;
+    private String username;
 
     @Column(nullable = false, length = 100)
     private String password;
@@ -50,16 +49,18 @@ public class Member {
     private Role role;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, insertable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", insertable = false)
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "guardian", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<Invitation> dependentConnections = new HashSet<>();
 
     @OneToMany(mappedBy = "dependent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<Invitation> guardianConnections = new HashSet<>();
 }

@@ -1,8 +1,8 @@
 spring:
-  application:
-    name: wecare
   profiles:
     active: dev
+  application:
+    name: wecare
   jpa:
     show-sql: true
     properties:
@@ -12,18 +12,13 @@ spring:
         format_sql: true
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-
 server:
   port: 8080
 
 logging:
   level:
-    org:
-      hibernate:
-        type:
-          descriptor:
-            sql:
-              BasicBinder: trace
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+    org.springframework.core.env: DEBUG
 
 springdoc:
   api-docs:

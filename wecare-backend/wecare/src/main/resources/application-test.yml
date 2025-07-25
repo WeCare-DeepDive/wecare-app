@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:mysql://localhost:3306/wecare_test
+    username: wecare_test
+    password: wecareTest
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    redis:
+      host: localhost
+
+jwt:
+  secret: qwerqwerqwerqwerqwerqwerqwerqwer
+  refresh-token-expiration-time: 360000
+  access-token-expiration-time: 3600000
+
+logging:
+  level:
+    org.springframework.jdbc.datasource.init.ScriptUtils: DEBUG

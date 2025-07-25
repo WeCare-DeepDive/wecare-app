@@ -22,8 +22,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     @Transactional(readOnly = true) // 읽기 전용 트랜잭션 설정
-    public UserDetails loadUserByUsername(String memberId) throws UsernameNotFoundException {
-        return memberRepository.findByMemberId(memberId)
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return memberRepository.findByUsername(username)
                 .map(this::convertToUserDetails)
                 .orElseThrow(() ->
                         // 보안상의 이유로 상세 ID 노출 제한
@@ -35,7 +35,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         GrantedAuthority authority = new SimpleGrantedAuthority(member.getRole().name());
 
         return new User(
-                String.valueOf(member.getId()), // memberId 대신 member의 id를 사용
+                member.getUsername(),
                 member.getPassword(),
                 Collections.singleton(authority)
         );
