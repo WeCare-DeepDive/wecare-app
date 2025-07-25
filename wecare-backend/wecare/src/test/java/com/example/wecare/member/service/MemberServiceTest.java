@@ -50,10 +50,10 @@ class MemberServiceTest {
     void setUp() {
         SecurityContextHolder.setContext(securityContext);
 
-        guardian1 = Member.builder().id(1L).memberId("guardian1").name("보호자1").role(Role.GUARDIAN).birthDate(LocalDate.of(1980, 1, 1)).build();
-        guardian2 = Member.builder().id(2L).memberId("guardian2").name("보호자2").role(Role.GUARDIAN).birthDate(LocalDate.of(1985, 5, 5)).build();
-        dependent1 = Member.builder().id(3L).memberId("dependent1").name("피보호자1").role(Role.DEPENDENT).birthDate(LocalDate.of(2000, 10, 10)).build();
-        dependent2 = Member.builder().id(4L).memberId("dependent2").name("피보호자2").role(Role.DEPENDENT).birthDate(LocalDate.of(2005, 12, 12)).build();
+        guardian1 = Member.builder().id(1L).username("guardian1").name("보호자1").role(Role.GUARDIAN).birthDate(LocalDate.of(1980, 1, 1)).build();
+        guardian2 = Member.builder().id(2L).username("guardian2").name("보호자2").role(Role.GUARDIAN).birthDate(LocalDate.of(1985, 5, 5)).build();
+        dependent1 = Member.builder().id(3L).username("dependent1").name("피보호자1").role(Role.DEPENDENT).birthDate(LocalDate.of(2000, 10, 10)).build();
+        dependent2 = Member.builder().id(4L).username("dependent2").name("피보호자2").role(Role.DEPENDENT).birthDate(LocalDate.of(2005, 12, 12)).build();
 
         // 관계 설정
         // guardian1 -> dependent1
@@ -105,7 +105,7 @@ class MemberServiceTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(guardian1.getId());
-        assertThat(response.getMemberId()).isEqualTo(guardian1.getMemberId());
+        assertThat(response.getMemberId()).isEqualTo(guardian1.getUsername());
         assertThat(response.getName()).isEqualTo(guardian1.getName());
     }
 
