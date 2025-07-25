@@ -1,5 +1,4 @@
 spring:
-  #테스트
   profiles:
 #    active: dev
   application:
