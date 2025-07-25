@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Builder
 public class MemberResponse {
     private Long id;
-    private String memberId;
+    private String username;
     private String name;
     private Gender gender;
     private LocalDate birthDate;

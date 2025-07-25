@@ -59,7 +59,7 @@ public class MemberService {
 
         return MemberResponse.builder()
                 .id(member.getId())
-                .memberId(member.getUsername())
+                .username(member.getUsername())
                 .name(member.getName())
                 .gender(member.getGender())
                 .birthDate(member.getBirthDate())

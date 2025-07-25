@@ -105,7 +105,7 @@ class MemberServiceTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(guardian1.getId());
-        assertThat(response.getMemberId()).isEqualTo(guardian1.getUsername());
+        assertThat(response.getUsername()).isEqualTo(guardian1.getUsername());
         assertThat(response.getName()).isEqualTo(guardian1.getName());
     }
 
