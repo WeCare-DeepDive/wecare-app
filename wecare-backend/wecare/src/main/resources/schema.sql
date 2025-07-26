@@ -5,77 +5,69 @@
 -- USE wecare_db;
 
 -- 1. 사용자 테이블
-CREATE TABLE `members`
+CREATE TABLE members
 (
-    `id`         BIGINT       NOT NULL AUTO_INCREMENT,
-    `birth_date` DATE         NOT NULL,
-    `created_at` DATETIME(6) DEFAULT NULL,
-    `gender`     ENUM('FEMALE','MALE') NOT NULL,
-    `name`       VARCHAR(50)  NOT NULL,
-    `password`   VARCHAR(100) NOT NULL,
-    `role`       ENUM('DEPENDENT','GUARDIAN') NOT NULL,
-    `updated_at` DATETIME(6) DEFAULT NULL,
-    `username`   VARCHAR(50)  NOT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_members_username` (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    id         BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    birth_date DATE         NOT NULL,
+    created_at DATETIME(6),
+    gender     ENUM('FEMALE', 'MALE') NOT NULL,
+    name       VARCHAR(50)  NOT NULL,
+    password   VARCHAR(100) NOT NULL,
+    role       ENUM('DEPENDENT', 'GUARDIAN') NOT NULL,
+    updated_at DATETIME(6),
+    username   VARCHAR(50)  NOT NULL UNIQUE
+);
 
 -- 2. 보호자-피보호자 연결 테이블
-CREATE TABLE `invitations`
+CREATE TABLE invitations
 (
-    `dependent_id` BIGINT NOT NULL,
-    `guardian_id`  BIGINT NOT NULL,
-    `created_at`   DATETIME(6) DEFAULT NULL,
-    `is_active`    TINYINT(1) NOT NULL DEFAULT '1',
-    PRIMARY KEY (`dependent_id`, `guardian_id`),
-    KEY            `fk_invitations_guardian_id` (`guardian_id`),
-    CONSTRAINT `fk_invitations_dependent_id` FOREIGN KEY (`dependent_id`) REFERENCES `members` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_invitations_guardian_id` FOREIGN KEY (`guardian_id`) REFERENCES `members` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    dependent_id BIGINT NOT NULL,
+    guardian_id  BIGINT NOT NULL,
+    created_at   DATETIME(6),
+    is_active    TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (dependent_id, guardian_id),
+    FOREIGN KEY (dependent_id) REFERENCES members (id) ON DELETE CASCADE,
+    FOREIGN KEY (guardian_id) REFERENCES members (id) ON DELETE CASCADE
+);
 
 -- 3. 루틴 테이블
-CREATE TABLE `routine`
+CREATE TABLE routine
 (
-    `id`           BIGINT       NOT NULL AUTO_INCREMENT,
-    `completed`    BIT(1)       NOT NULL,
-    `created_at`   DATETIME(6) DEFAULT NULL,
-    `description`  VARCHAR(1000) DEFAULT NULL,
-    `end_time`     DATETIME(6) DEFAULT NULL,
-    `is_repeat`    BIT(1)       NOT NULL,
-    `start_time`   DATETIME(6) NOT NULL,
-    `title`        VARCHAR(255) NOT NULL,
-    `type`         ENUM('ACTIVITY','CUSTOM','MEDICATION','SUPPLEMENT') NOT NULL,
-    `updated_at`   DATETIME(6) DEFAULT NULL,
-    `dependent_id` BIGINT       NOT NULL,
-    `guardian_id`  BIGINT       NOT NULL,
-    PRIMARY KEY (`id`),
-    KEY            `fk_routine_dependent_id` (`dependent_id`),
-    KEY            `fk_routine_guardian_id` (`guardian_id`),
-    CONSTRAINT `fk_routine_dependent_id` FOREIGN KEY (`dependent_id`) REFERENCES `members` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_routine_guardian_id` FOREIGN KEY (`guardian_id`) REFERENCES `members` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    id           BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    completed    TINYINT(1)       NOT NULL,
+    created_at   DATETIME(6),
+    description  VARCHAR(1000),
+    end_time     DATETIME(6),
+    is_repeat    TINYINT(1)       NOT NULL,
+    start_time   DATETIME(6) NOT NULL,
+    title        VARCHAR(255) NOT NULL,
+    type         ENUM('ACTIVITY', 'CUSTOM', 'MEDICATION', 'SUPPLEMENT') NOT NULL,
+    updated_at   DATETIME(6),
+    dependent_id BIGINT       NOT NULL,
+    guardian_id  BIGINT       NOT NULL,
+    FOREIGN KEY (dependent_id) REFERENCES members (id) ON DELETE CASCADE,
+    FOREIGN KEY (guardian_id) REFERENCES members (id) ON DELETE CASCADE
+);
 
 -- 4. 루틴 알람 설정 테이블
-CREATE TABLE `routine_alarm_setting`
+CREATE TABLE routine_alarm_setting
 (
-    `id`                     BIGINT NOT NULL AUTO_INCREMENT,
-    `alert_before_end_min`   INT    DEFAULT NULL,
-    `alert_before_start_min` INT    DEFAULT NULL,
-    `repeat_interval_min`    INT    DEFAULT NULL,
-    `routine_id`             BIGINT DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_routine_alarm_setting_routine_id` (`routine_id`),
-    CONSTRAINT `fk_routine_alarm_setting_routine_id` FOREIGN KEY (`routine_id`) REFERENCES `routine` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    id                     BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    alert_before_end_min   INT,
+    alert_before_start_min INT,
+    repeat_interval_min    INT,
+    routine_id             BIGINT UNIQUE,
+    FOREIGN KEY (routine_id) REFERENCES routine (id) ON DELETE CASCADE
+);
 
 -- 5. 루틴 반복 요일 테이블
-CREATE TABLE `routine_repeat_days`
+CREATE TABLE routine_repeat_days
 (
-    `routine_id` BIGINT NOT NULL,
-    `day`        ENUM('DAILY','MON','TUE','WED','THU','FRI','SAT','SUN') NOT NULL,
-    UNIQUE KEY `pk_routine_repeat_days` (`routine_id`, `day`),
-    CONSTRAINT `fk_routine_repeat_days_routine_id` FOREIGN KEY (`routine_id`) REFERENCES `routine` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    routine_id BIGINT NOT NULL,
+    day        ENUM('DAILY','MON','TUE','WED','THU','FRI','SAT','SUN') NOT NULL,
+    PRIMARY KEY (routine_id, day),
+    FOREIGN KEY (routine_id) REFERENCES routine (id) ON DELETE CASCADE
+);
 
 -- 6. 루틴 체크 테이블
 CREATE TABLE routine_checks
