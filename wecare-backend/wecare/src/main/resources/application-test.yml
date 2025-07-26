@@ -7,11 +7,13 @@ spring:
     username: wecare_test
     password: wecareTest
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   data:
     redis:
       host: localhost
-
+  sql:
+    init:
+      mode: always   # 항상 SQL 실행
+      schema-locations: classpath:schema.sql
 jwt:
   secret: qwerqwerqwerqwerqwerqwerqwerqwer
   refresh-token-expiration-time: 360000
