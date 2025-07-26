@@ -1,17 +1,20 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none #JPA를 통한 DDL 자동 생성 비활성화
   datasource:
     url: jdbc:mysql://localhost:3306/wecare_test
     username: wecare_test
     password: wecareTest
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   data:
     redis:
       host: localhost
-
+  sql:
+    init:
+      mode: always   # 항상 SQL 실행
+      schema-locations: classpath:schema.sql
+      continue-on-error: false #쿼리 실행 중 에러 발생 시 바로 종료 (시간 절약)
 jwt:
   secret: qwerqwerqwerqwerqwerqwerqwerqwer
   refresh-token-expiration-time: 360000

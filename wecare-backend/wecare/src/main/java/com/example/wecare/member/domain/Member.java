@@ -1,5 +1,6 @@
 package com.example.wecare.member.domain;
 
+import com.example.wecare.invitation.domain.Invitation;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -7,14 +8,20 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Setter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "members")
+@Table(name = "members", uniqueConstraints = @UniqueConstraint(name = "uk_members_username", columnNames = {"username"}))
 public class Member {
 
     @Id
@@ -48,4 +55,12 @@ public class Member {
     @UpdateTimestamp
     @Column(name = "updated_at", insertable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "guardian", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Invitation> dependentConnections = new HashSet<>();
+
+    @OneToMany(mappedBy = "dependent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Invitation> guardianConnections = new HashSet<>();
 }
