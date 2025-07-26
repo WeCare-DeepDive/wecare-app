@@ -1,10 +1,11 @@
-package com.example.wecare.member.service;
+package com.example.wecare.unit.service;
 
 import com.example.wecare.invitation.domain.Invitation;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.dto.MemberResponse;
 import com.example.wecare.member.repository.MemberRepository;
+import com.example.wecare.member.service.MemberService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;

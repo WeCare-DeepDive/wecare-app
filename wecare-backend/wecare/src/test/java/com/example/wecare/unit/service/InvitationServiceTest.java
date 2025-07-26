@@ -1,8 +1,9 @@
-package com.example.wecare.invitation.service;
+package com.example.wecare.unit.service;
 
 import com.example.wecare.invitation.domain.Invitation;
 import com.example.wecare.invitation.domain.InvitationId;
 import com.example.wecare.invitation.repository.InvitationRepository;
+import com.example.wecare.invitation.service.InvitationService;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.repository.MemberRepository;

@@ -1,4 +1,4 @@
-package com.example.wecare.routine.service;
+package com.example.wecare.unit.service;
 
 import com.example.wecare.invitation.domain.Invitation;
 import com.example.wecare.invitation.repository.InvitationRepository;
@@ -12,6 +12,7 @@ import com.example.wecare.routine.domain.RoutineType;
 import com.example.wecare.routine.dto.RoutineRequest;
 import com.example.wecare.routine.repository.RoutineAlarmSettingRepository;
 import com.example.wecare.routine.repository.RoutineRepository;
+import com.example.wecare.routine.service.RoutineService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
