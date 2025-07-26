@@ -1,7 +1,7 @@
 
 /* Fonts */
 export const FontFamily = {
-    pretendard: "Pretendard",
+    pretendard: "PretendardVariable",
     nanumSquareRoundOTF: "NanumSquareRoundOTF",
 };
 /* Font sizes */

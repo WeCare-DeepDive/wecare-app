@@ -1,82 +1,92 @@
 import React from 'react';
-import { Text, View, Image, StyleSheet } from 'react-native';
-// import Pictureframe from '../../../assets/pictureframe.svg';
+import { Text, View, Image, StyleSheet, Platform, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+// Svg import
+import FaviconDark from '../../../assets/favicon/FaviconDark.svg';
+import FaviconLight from '../../../assets/favicon/FaviconLight.svg';
+import IconBell from '../../../assets/Iconsvg/IconBell.svg';
+import IconPlus from '../../../assets/Iconsvg/IconPlus.svg';
+// Style
+import { Colors, FontFamily, FontSize, Gap, LineHeight, Padding } from '../../styles/theme';
 
-const Header = ({ title = '', showBackButton = false, onBackPress, onBellPress, onNotificationPress }) => {
+const { width: screenWidth } = Dimensions.get('window');
+
+const Header = ({ title = '', onBellPress, onNotificationPress }) => {
   return (
-    <View style={styles.header}>
-      <View style={styles.headeritem}>
-        <View style={styles.logocontainer}>
-          <Image style={styles.logoIcon} 
-          resizeMode="contain" 
-          source={require('../../../assets/pictureframe.png')}
-          />
-          <Text style={[styles.text2, styles.textTypo1]}>{title}</Text>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.header}>
+        <View style={styles.headeritem}>
+          <View style={styles.logocontainer}>
+            <Image 
+              style={styles.logoIcon} 
+              resizeMode="contain" 
+              source={require('../../../assets/Icon.png')} 
+            />
+            <Text style={[styles.text2, styles.textTypo1]}>{title}</Text>
+          </View>
+          <View style={styles.container}>
+            <IconBell onPress={onBellPress} width={24} height={24} />
+            <IconPlus onPress={onNotificationPress} width={24} height={24} />
+          </View>
+        </View>
       </View>
-      <View style={styles.container}>
-          {/* <Pictureframe style={styles.iconbell} width={24} height={24} />
-          <Pictureframe style={styles.iconbell} width={24} height={24} /> */}
-      </View>
-    </View>
-  </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: Colors.purple300 ,
+  },
   textTypo1: {
     fontWeight: "700",
-    fontFamily: "NanumSquareRoundOTF"
+    fontFamily: FontFamily.pretendard
   },
   logoIcon: {
     width: 32,
-    // borderRadius: 24,
     height: 32,
-    // opacity: 0.77
-  },
-  text2: {
-    fontSize: 24,
-    lineHeight: 38,
-    textAlign: "left",
-    color: "#000"
   },
   logocontainer: {
-    gap: 6,
+    gap: Gap.gap_6 || 6,
     flexDirection: "row",
     alignItems: "center"
   },
-  iconbell: {
-    overflow: "hidden"
+  text2: {
+    fontSize: FontSize.size_32 || 24,
+    lineHeight: LineHeight.lineHeight_38 || 38,
+    textAlign: "left",
+    color: Colors.purple500,
   },
   container: {
-    gap: 20,
+    gap: Gap.gap_20 || 20,
     flexDirection: "row",
     alignItems: "center"
   },
   headeritem: {
-    width: 353,
+    width: screenWidth - 40,
     justifyContent: "space-between",
-    gap: 0,
-    flexDirection: "row",
-    alignItems: "center"
-  },
-  header: {
-    top: 54,
-    shadowColor: "rgba(0, 0, 0, 0.08)",
-    shadowOffset: {
-      width: 0,
-      height: 2
-    },
-    shadowRadius: 4,
-    elevation: 4,
-    height: 66,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: "#d6d8ff",
-    left: 0,
-    shadowOpacity: 1,
     flexDirection: "row",
     alignItems: "center",
-    position: "absolute"
+  },
+  header: {
+    paddingHorizontal: Padding.padding_20 || 20,
+    paddingVertical: Padding.padding_14 || 14,
+    backgroundColor: Colors.purple300 || "#d6d8ff",
+    flexDirection: "row",
+    alignItems: "center",
+    width: '100%',
+    minHeight: 60,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.customBlack || "rgba(0, 0, 0, 0.08)",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   }
 });
 
