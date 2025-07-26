@@ -7,7 +7,7 @@ export default function HomeScreen() {
   return (
     <View testID="home-screen">
       <Text>Home Screen</Text>
-      <TimePicker />
+      {/* <TimePicker /> */}
     </View>
   );
 }

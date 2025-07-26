@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 // Svg import
 import FaviconDark from '../../../assets/favicon/FaviconDark.svg';
 import FaviconLight from '../../../assets/favicon/FaviconLight.svg';
-import IconBell from '../../../assets/icons/IconBell.svg';
-import IconPlus from '../../../assets/icons/IconPlus.svg';
+import IconBell from '../../../assets/Iconsvg/IconBell.svg';
+import IconPlus from '../../../assets/Iconsvg/IconPlus.svg';
 // Style
 import { Colors, FontFamily, FontSize, Gap, LineHeight, Padding } from '../../styles/theme';
 

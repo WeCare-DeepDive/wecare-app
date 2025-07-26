@@ -8,7 +8,7 @@ import MyPageScreen from '../screen/My/MyPageScreen';
 import HomeScreen from '../screen/Home/HomeScreen';
 import Header from '../components/common/Header';
 // SVG import
-import TabBarIcon from '../components/icons/TabBarIcon';
+import TabBarIcon from '../components/Iconsvg/TabBarIcon';
 // Style
 import { StyleSheet, Text, Platform } from 'react-native';
 import { Colors, FontSize } from '../styles/theme';
