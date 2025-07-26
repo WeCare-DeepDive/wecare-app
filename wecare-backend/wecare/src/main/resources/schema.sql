@@ -1,8 +1,8 @@
--- DB 및 User 생성 쿼리
--- CREATE DATABASE wecare_db;
--- CREATE USER 'wecare_dml'@'%' IDENTIFIED BY 'wecarePassword';
--- GRANT SELECT, DELETE, UPDATE, INSERT ON wecare_db.* TO 'wecare_dml'@'%';
--- USE wecare_db;
+-- Test용 DB 및 User 생성 쿼리
+-- CREATE DATABASE wecare_test;
+-- CREATE USER 'wecare_test'@'%' IDENTIFIED BY 'wecareTest';
+-- GRANT * ON wecare_test.* TO 'wecare_test'@'%';
+-- USE wecare_test;
 
 -- 1. 사용자 테이블
 CREATE TABLE members
