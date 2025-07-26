@@ -10,8 +10,8 @@ import Header from '../components/common/Header';
 // SVG import
 import TabBarIcon from '../components/icons/TabBarIcon';
 // Style
-import { StyleSheet, Text } from 'react-native';
-import { Colors, FontFamily, FontSize, Gap, LineHeight, Padding } from '../styles/theme';
+import { StyleSheet, Text, Platform } from 'react-native';
+import { Colors, FontSize } from '../styles/theme';
 
 const Tab = createBottomTabNavigator();
 
@@ -46,7 +46,15 @@ export default function BottomNavigation() {
             Report: '리포트',
             My: '마이',
           };
-          return <Text style={focused ? styles.textFocused : styles.textUnfocused}>{labels[route.name]}</Text>;
+          return (
+            <Text
+              style={[
+                styles.tabLabel,
+                focused ? styles.tabLabelActive : styles.tabLabelInactive,
+              ]}>
+              {labels[route.name]}
+            </Text>
+          );
         },
       })}>
       <Tab.Screen name='Home' component={HomeScreen} />
@@ -57,21 +65,54 @@ export default function BottomNavigation() {
     </Tab.Navigator>
   );
 }
-
 const styles = StyleSheet.create({
-  textFocused: {
-    lineHeight: 16,
-    color: Colors.purple500,
-    fontSize: FontSize.size_16,
-    textAlign: 'center',
-    fontFamily: FontFamily.nanumEB,
-    fontWeight: 900,
+  container: {
+    flex: 1,
+    backgroundColor: Colors.gray1,
   },
-  textUnfocused: {
-    lineHeight: 16,
+  mainContent: {
+    flex: 1,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: Colors.customWhite,
+    borderTopWidth: 1,
+    borderTopColor: Colors.gray5,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+    paddingTop: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.customBlack,
+        shadowOffset: {width: 0, height: -2},
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  tabIcon: {
+    fontSize: FontSize.size_24,
+    marginBottom: 4,
+  },
+  tabLabel: {
     fontSize: FontSize.size_16,
     textAlign: 'center',
-    fontFamily: FontFamily.nanumR,
-    color: Colors.gray600,
+  },
+  tabLabelActive: {
+    color: Colors.purple500,
+    fontWeight: 'bold',
+  },
+  tabLabelInactive: {
+    color: Colors.gray7,
+  },
+  smallScreenText: {
+    fontSize: FontSize.size_16 - 2,
   },
 });

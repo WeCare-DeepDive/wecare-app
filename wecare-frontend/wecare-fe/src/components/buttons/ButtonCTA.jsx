@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   	textTypo2: {
     		textAlign: "left",
     		color: Color.colorBlack,
-    		fontFamily: FontFamily.nanumSquareRoundOTF,
+    		fontFamily: FontFamily.pretendard,
     		fontWeight: "700"
   	},
   	borderPosition1: {
@@ -198,12 +198,12 @@ const styles = StyleSheet.create({
   	textTypo3: {
     		color: Color.colorBlack,
     		textAlign: "center",
-    		fontFamily: FontFamily.nanumSquareRoundOTF
+    		fontFamily: FontFamily.pretendard
   	},
   	textTypo1: {
     		color: Color.colorDimgray,
     		textAlign: "center",
-    		fontFamily: FontFamily.nanumSquareRoundOTF
+    		fontFamily: FontFamily.pretendard
   	},
   	btnctaFlexBox: {
     		width: 276,
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     		fontSize: FontSize.size_16,
     		textAlign: "center",
     		top: "0%",
-    		fontFamily: FontFamily.nanumSquareRoundOTF,
+    		fontFamily: FontFamily.pretendard,
     		position: "absolute"
   	},
   	textPosition: {
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     		fontSize: FontSize.size_16,
     		textAlign: "center",
     		top: "0%",
-    		fontFamily: FontFamily.nanumSquareRoundOTF,
+    		fontFamily: FontFamily.pretendard,
     		position: "absolute"
   	},
   	timePosition: {
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   	text3: {
     		textAlign: "center",
     		color: Color.colorBlack,
-    		fontFamily: FontFamily.nanumSquareRoundOTF
+    		fontFamily: FontFamily.pretendard
   	},
   	profiletext: {
     		width: "61.38%",
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     		fontSize: FontSize.size_16,
     		textAlign: "left",
     		color: Color.colorBlack,
-    		fontFamily: FontFamily.nanumSquareRoundOTF,
+    		fontFamily: FontFamily.pretendard,
     		fontWeight: "700"
   	},
   	alramcontentcontainer: {
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
   	text12: {
     		color: Color.colorWhite,
     		textAlign: "center",
-    		fontFamily: FontFamily.nanumSquareRoundOTF,
+    		fontFamily: FontFamily.pretendard,
     		fontWeight: "700",
     		lineHeight: 38,
     		fontSize: FontSize.size_24
