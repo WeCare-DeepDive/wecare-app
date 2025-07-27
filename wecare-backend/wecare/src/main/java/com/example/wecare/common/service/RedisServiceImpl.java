@@ -1,4 +1,4 @@
-package com.example.wecare.redis.service;
+package com.example.wecare.common.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

@@ -1,4 +1,4 @@
-package com.example.wecare.config;
+package com.example.wecare.common.config;
 
 import com.example.wecare.auth.jwt.JwtAuthenticationFilter;
 import com.example.wecare.auth.jwt.JwtUtil;

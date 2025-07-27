@@ -1,4 +1,4 @@
-package com.example.wecare.config;
+package com.example.wecare.common.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
         servers = {
-                @Server(url = "https://www.mobidic.shop", description = "EC2 배포 서버"),
+                @Server(url = "https://wecare.mobidic.shop", description = "EC2 배포 서버"),
                 @Server(url = "http://localhost:8080", description = "로컬 서버")
         })
 @Configuration

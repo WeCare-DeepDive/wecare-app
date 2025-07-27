@@ -1,6 +1,6 @@
-package com.example.wecare.redis.controller;
+package com.example.wecare.common.controller;
 
-import com.example.wecare.redis.service.RedisService;
+import com.example.wecare.common.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
