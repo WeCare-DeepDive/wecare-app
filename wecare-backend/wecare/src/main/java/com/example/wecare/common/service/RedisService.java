@@ -1,4 +1,4 @@
-package com.example.wecare.redis.service;
+package com.example.wecare.common.service;
 
 import java.util.concurrent.TimeUnit;
 

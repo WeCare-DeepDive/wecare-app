@@ -10,7 +10,7 @@ import com.example.wecare.member.domain.Gender;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.repository.MemberRepository;
-import com.example.wecare.redis.service.RedisService;
+import com.example.wecare.common.service.RedisService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

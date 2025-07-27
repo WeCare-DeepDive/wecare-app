@@ -7,7 +7,7 @@ import com.example.wecare.auth.jwt.JwtProperties;
 import com.example.wecare.auth.jwt.JwtUtil;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.repository.MemberRepository;
-import com.example.wecare.redis.service.RedisService;
+import com.example.wecare.common.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

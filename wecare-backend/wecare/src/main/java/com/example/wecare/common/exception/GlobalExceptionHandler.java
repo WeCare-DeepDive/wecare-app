@@ -1,4 +1,4 @@
-package com.example.wecare.exception;
+package com.example.wecare.common.exception;
 
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
