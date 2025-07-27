@@ -14,4 +14,7 @@ config.resolver = {
   sourceExts: [...config.resolver.sourceExts, 'svg'],
 };
 
+// New Architecture 관련 변환기 설정
+config.transformer.unstable_allowRequireContext = true;
+
 module.exports = config;

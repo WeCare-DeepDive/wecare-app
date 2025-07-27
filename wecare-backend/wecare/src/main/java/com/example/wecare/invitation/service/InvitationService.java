@@ -5,7 +5,7 @@ import com.example.wecare.invitation.repository.InvitationRepository;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.repository.MemberRepository;
-import com.example.wecare.redis.service.RedisService;
+import com.example.wecare.common.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
