@@ -3,22 +3,22 @@ export const Colors = {
   // Primary
   labelsPrimary: '#000000',
   primary90: '#001D6C',
-  
+
   // header font color
-  blueviolet: "#6053fa",
+  blueviolet: '#6053fa',
 
   // 단색
   customBlack: '#000000',
   customWhite: '#ffffff',
-  
+
   // purple scale
-  purple500: '#7777FF',
+  purple500: '#685EFF',
   purple300: '#D6D8FF',
   purple600: '#352BFF',
   purple700: '#1600DD',
   purple200: '#EFF0FF',
   purple400: '#C6C9FC',
-  
+
   // Gray Scale
   gray10: '#60656E',
   gray9: '#8A8D94',
@@ -30,6 +30,10 @@ export const Colors = {
   gray1: '#F8F8F8',
   gray600: '#4B5563',
 
+  /* Colors */
+  colorGray: 'rgba(0, 0, 0, 0.25)',
+  colorLavender: '#eff0ff',
+  colorDimgray: '#60656e',
   // 버튼배경
   iconDisable: '#374957',
 
@@ -48,7 +52,6 @@ export const FontFamily = {
   nanumR: 'NanumSquareRoundOTFR',
   pretendard: 'PretendardVariable',
 };
-
 
 // 폰트 사이즈
 export const FontSize = {
@@ -73,6 +76,7 @@ export const LineHeight = {
   24: 28,
   28: 32,
   32: 36,
+  34: 38,
   36: 40,
 };
 
@@ -99,7 +103,12 @@ export const Padding = {
   p_8: 8,
   p_10: 10,
   p_30: 30,
-}; 
+};
+
+// 테마
+export const BorderRadius = {
+  24: 24,
+};
 
 export const Theme = {
   Colors,
@@ -108,4 +117,5 @@ export const Theme = {
   LineHeight,
   Gap,
   Padding,
-}
+  BorderRadius,
+};
