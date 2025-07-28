@@ -2,11 +2,9 @@ package com.example.wecare.auth.dto;
 
 import com.example.wecare.member.domain.Gender;
 import com.example.wecare.member.domain.Role;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
@@ -33,6 +31,7 @@ public class SignUpRequest {
 
     @NotNull(message = "생년월일은 필수 입력 값입니다.")
     @Past(message = "생년월일은 과거 날짜여야 합니다.")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
     @NotNull(message = "역할은 필수 입력 값입니다.")

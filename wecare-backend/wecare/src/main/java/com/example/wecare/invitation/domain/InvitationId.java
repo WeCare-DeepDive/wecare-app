@@ -22,7 +22,7 @@ public class InvitationId implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         InvitationId that = (InvitationId) o;
         return Objects.equals(guardian, that.guardian) &&
-               Objects.equals(dependent, that.dependent);
+                Objects.equals(dependent, that.dependent);
     }
 
     @Override
