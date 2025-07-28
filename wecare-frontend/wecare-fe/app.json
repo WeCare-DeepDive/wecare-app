@@ -8,8 +8,8 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon-light.png",
-      "resizeMode": "contain",
+      "image": "./assets/splash-full.png",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "ios": {
@@ -34,9 +34,6 @@
         "projectId": "45cd0beb-6343-41db-a414-7e2e6b34443e"
       }
     },
-    "plugins": [
-      "expo-font",
-      "expo-asset"
-    ]
+    "plugins": ["expo-font", "expo-asset"]
   }
 }

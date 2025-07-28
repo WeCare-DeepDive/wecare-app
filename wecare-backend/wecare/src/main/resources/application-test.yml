@@ -10,13 +10,14 @@ spring:
   data:
     redis:
       host: localhost
+      port: 6379
   sql:
     init:
       mode: always   # 항상 SQL 실행
       schema-locations: classpath:schema.sql
       continue-on-error: false #쿼리 실행 중 에러 발생 시 바로 종료 (시간 절약)
 jwt:
-  secret: qwerqwerqwerqwerqwerqwerqwerqwer
+  secret: 21c7ba8bc0e980cd7e0a0888752f819ad1e453abb59727a40edc3ca10a33cac5c407fd3f308547b14a7204766c77e854bffb9751017efe58262350efa50524d4
   refresh-token-expiration-time: 360000
   access-token-expiration-time: 3600000
 

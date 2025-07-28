@@ -47,11 +47,7 @@ export default function BottomNavigation() {
             My: '마이',
           };
           return (
-            <Text
-              style={[
-                styles.tabLabel,
-                focused ? styles.tabLabelActive : styles.tabLabelInactive,
-              ]}>
+            <Text style={[styles.tabLabel, focused ? styles.tabLabelActive : styles.tabLabelInactive]}>
               {labels[route.name]}
             </Text>
           );
@@ -83,7 +79,7 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowColor: Colors.customBlack,
-        shadowOffset: {width: 0, height: -2},
+        shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
         shadowRadius: 3,
       },
