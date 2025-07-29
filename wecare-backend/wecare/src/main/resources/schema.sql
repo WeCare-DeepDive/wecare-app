@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS routine (
     is_repeat    TINYINT(1) NOT NULL,
     start_time   DATETIME(6) NOT NULL,
     title        VARCHAR(255) NOT NULL,
-    type         ENUM('ACTIVITY', 'CUSTOM', 'MEDICATION', 'SUPPLEMENT') NOT NULL,
+    type         ENUM('ACTIVITY', 'CUSTOM', 'MEDICATION', 'SUPPLEMENT', 'MEAL') NOT NULL,
     updated_at   DATETIME(6),
     dependent_id BIGINT NOT NULL,
     guardian_id  BIGINT NOT NULL,
