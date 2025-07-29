@@ -3,7 +3,7 @@ import apiProvider from '../providers/apiProvider';
 
 const useAuthStore = create((set, get) => ({
   user: null,
-  isAuthenticated: true,
+  isAuthenticated: false,
   accessToken: null,
   refreshToken: null,
   isLoading: false,
