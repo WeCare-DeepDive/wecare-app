@@ -70,7 +70,7 @@ public class RoutineService {
                 .description(request.getDescription())
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
-                .is_repeat(request.isRepeat())
+                .repeat(request.isRepeat())
                 .repeatDays(request.getRepeatDays())
                 .completed(false)
                 .guardianMemo(request.getGuardianMemo()) // 보호자 메모 추가
@@ -144,7 +144,7 @@ public class RoutineService {
         routine.setDescription(request.getDescription());
         routine.setStartTime(request.getStartTime());
         routine.setEndTime(request.getEndTime());
-        routine.set_repeat(request.isRepeat());
+        routine.setRepeat(request.isRepeat());
         if (request.getRepeatDays() != null) {
             routine.setRepeatDays(request.getRepeatDays());
         }
@@ -284,7 +284,7 @@ public class RoutineService {
                 .description(routine.getDescription())
                 .startTime(routine.getStartTime())
                 .endTime(routine.getEndTime())
-                .repeat(routine.is_repeat())
+                .repeat(routine.isRepeat())
                 .repeatDays(routine.getRepeatDays())
                 .alertBeforeStartMin(routine.getAlarmSetting() != null ? routine.getAlarmSetting().getAlertBeforeStartMin() : null)
                 .alertBeforeEndMin(routine.getAlarmSetting() != null ? routine.getAlarmSetting().getAlertBeforeEndMin() : null)

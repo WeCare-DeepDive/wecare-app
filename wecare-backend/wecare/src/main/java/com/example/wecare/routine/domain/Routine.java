@@ -47,8 +47,8 @@ public class Routine {
 
     private LocalDateTime endTime;
 
-    @Column(nullable = false)
-    private boolean is_repeat;
+    @Column(name = "is_repeat", nullable = false)
+    private boolean repeat;
 
     @ElementCollection(targetClass = RepeatDay.class)
     @Enumerated(EnumType.STRING)
@@ -61,7 +61,10 @@ public class Routine {
     @OneToOne(mappedBy = "routine", cascade = CascadeType.ALL, orphanRemoval = true)
     private RoutineAlarmSetting alarmSetting;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist
