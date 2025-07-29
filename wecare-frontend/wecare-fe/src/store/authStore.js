@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import apiProvider from '../providers/apiProvider';
-import tokenStorage from '../utils/tokenStorage';
 
 const useAuthStore = create((set, get) => ({
   user: null,
@@ -9,6 +8,7 @@ const useAuthStore = create((set, get) => ({
   refreshToken: null,
   isLoading: false,
   error: null,
+  navigationRef: null, // 네비게이션 참조 저장
 
   // 로그인 액션
   login: async (credentials) => {
@@ -19,13 +19,19 @@ const useAuthStore = create((set, get) => ({
       // API 응답에서 토큰 추출
       const { accessToken, refreshToken } = response;
       
-      // 토큰을 메모리에 저장
-      await tokenStorage.setTokens(accessToken, refreshToken);
+      // 토큰을 zustand 상태에 저장
+      set({
+        accessToken,
+        refreshToken,
+      });
+      console.log('✅ 토큰 저장 완료');
       
       // 사용자 정보 가져오기
       let user = null;
       try {
-        user = await apiProvider.getUserInfo(refreshToken);
+        // 약간의 딜레이 (임시 디버깅용)
+        await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms 대기
+        user = await apiProvider.getUserInfo();
       } catch (error) {
         console.warn('Failed to fetch user info:', error);
         // 임시로 기본 사용자 정보 설정 (토큰에서 추출 가능한 정보 사용)
@@ -48,6 +54,7 @@ const useAuthStore = create((set, get) => ({
       return { success: true, user };
     } catch (error) {
       console.error('Login error:', error);
+      console.error('Login error:', error.response);
       set({
         isLoading: false,
         error: error.message || '로그인에 실패했습니다.',
@@ -80,17 +87,17 @@ const useAuthStore = create((set, get) => ({
       }
       
       const { accessToken, refreshToken } = loginResponse;
-      // console.log('accessToken', accessToken);
-      // console.log('refreshToken', refreshToken);
       
-      // 4. 토큰을 메모리에 저장
-      await tokenStorage.setTokens(accessToken, refreshToken);
-      
+      // 4. zustand 상태에 저장
+      set({
+        accessToken,
+        refreshToken,
+      });
+
       // 5. 사용자 정보 가져오기
       let user = null;
       try {
-        user = await apiProvider.getUserInfo(refreshToken);
-        // console.log('user', user);
+        user = await apiProvider.getUserInfo();
       } catch (error) {
         console.warn('Failed to fetch user info:', error);
         // 임시로 기본 사용자 정보 설정
@@ -126,9 +133,7 @@ const useAuthStore = create((set, get) => ({
 
   // 로그아웃 액션
   logout: async () => {
-    // 저장된 토큰 삭제
-    await tokenStorage.clearTokens();
-    
+    // zustand 상태에서 토큰 삭제
     set({
       user: null,
       isAuthenticated: false,
@@ -136,7 +141,25 @@ const useAuthStore = create((set, get) => ({
       refreshToken: null,
       error: null,
     });
+
+    // 네비게이션이 설정되어 있으면 로그인 화면으로 이동
+    const { navigationRef } = get();
+    if (navigationRef) {
+      navigationRef.reset({
+        index: 0,
+        routes: [{ name: 'Auth' }],
+      });
+    }
   },
+
+  // 강제 로그아웃 액션 (토큰 만료 시)
+  forceLogout: async () => {
+    console.log('🔄 강제 로그아웃 실행...');
+    await get().logout();
+  },
+
+  // 네비게이션 참조 설정
+  setNavigationRef: (ref) => set({ navigationRef: ref }),
 
   // 사용자 정보 설정
   setUser: (user) => set({ user }),
@@ -159,11 +182,11 @@ const useAuthStore = create((set, get) => ({
     if (!accessToken) return;
 
     try {
-      const user = await apiProvider.getUserInfo(refreshToken);
+      const user = await apiProvider.getUserInfo();
       set({ user });
     } catch (error) {
       console.error('Fetch user info error:', error);
-      // 토큰이 만료된 경우 로그아웃
+      // 토큰이 만료된 경우 로그아웃 (이제 인터셉터에서 처리됨)
       if (error.message.includes('401')) {
         get().logout();
       }
