@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import BottomNavigation from './src/navigation/BottomNavigation';
 import * as Font from 'expo-font';
@@ -29,8 +29,10 @@ SplashScreen.preventAutoHideAsync();
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
   const [error, setError] = useState(null);
+  const navigationRef = useRef(null);
+  
   // 로그인 정보
-  const { isAuthenticated, setTokens, fetchUserInfo } = useAuthStore();
+  const { isAuthenticated, setTokens, fetchUserInfo, setNavigationRef, forceLogout } = useAuthStore();
   console.log('로그인정보 확인: ', isAuthenticated);
 
   useEffect(() => {
@@ -53,6 +55,25 @@ export default function App() {
 
     prepare();
   }, []);
+
+  // 네비게이션 참조 설정
+  useEffect(() => {
+    setNavigationRef(navigationRef.current);
+  }, [setNavigationRef]);
+
+  // 강제 로그아웃 이벤트 감지
+  useEffect(() => {
+    const handleForceLogout = () => {
+      console.log('🚨 강제 로그아웃 이벤트 감지');
+      forceLogout();
+    };
+
+    // React Native에서는 window 객체가 없으므로 다른 방식으로 이벤트 처리
+    // apiProvider에서 직접 forceLogout 호출하도록 수정
+    return () => {
+      // cleanup if needed
+    };
+  }, [forceLogout]);
 
   // 앱이 준비되면 스플래시 스크린 숨기기
   useEffect(() => {
@@ -92,5 +113,9 @@ export default function App() {
     );
   }
 
-  return <NavigationContainer>{isAuthenticated ? <BottomNavigation /> : <AuthNavigatino />}</NavigationContainer>;
+  return (
+    <NavigationContainer ref={navigationRef}>
+      {isAuthenticated ? <BottomNavigation /> : <AuthNavigatino />}
+    </NavigationContainer>
+  );
 }

@@ -36,11 +36,11 @@ export default function LoginScreen() {
       // 로그인 성공 시 자동으로 메인 화면으로 이동 (App.js에서 처리)
     } catch (error) {
       console.error('Login failed:', error);
-      Alert.alert(
-        '로그인 실패',
-        error.message || '로그인에 실패했습니다. 다시 시도해주세요.',
-        [{ text: '확인' }]
-      );
+      // Alert.alert(
+      //   '로그인 실패',
+      //   '로그인에 실패했습니다. 다시 시도해주세요.',
+      //   [{ text: '확인' }]
+      // );
     }
   };
   
@@ -134,7 +134,7 @@ export default function LoginScreen() {
         {/* 에러 메시지 표시 */}
         {error && (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorMessage}>{error}</Text>
+            <Text style={styles.errorMessage}>로그인에 실패했습니다. 다시 시도해주세요.</Text>
           </View>
         )}
       </View>
