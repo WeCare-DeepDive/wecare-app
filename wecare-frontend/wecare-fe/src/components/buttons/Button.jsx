@@ -33,7 +33,7 @@ const CustomButton = ({
   ];
 
   return (
-    <TouchableOpacity style={buttonStyle} onPress={isActive ? onPress : null} disabled={!isActive}>
+    <TouchableOpacity style={buttonStyle} onPress={onPress} disabled={!isActive}>
       <Text style={textStyle}>{title}</Text>
     </TouchableOpacity>
   );

@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Text, View, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { Text, View, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { Theme } from '../../styles/theme';
 import { useNavigation } from '@react-navigation/native';
 import CustomButton from '../../components/buttons/Button';
+import { useAuthStore } from '../../store/authStore';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
-
+  const { login, isLoading, error } = useAuthStore();
+  
   const {
     control,
     handleSubmit,
@@ -26,11 +28,22 @@ export default function LoginScreen() {
   const watchedValues = watch();
   const isFormValid = watchedValues.userId && watchedValues.password && isValid;
 
-  const onSubmit = (data) => {
-    console.log('Login Data:', data);
-    // 로그인 로직
-    // navigation.navigate('Main'); // 로그인 성공 시 이동
+  const onSubmit = async (data) => {
+    try {
+      console.log('Login Data:', data);
+      await login(data);
+      console.log('Login successful!');
+      // 로그인 성공 시 자동으로 메인 화면으로 이동 (App.js에서 처리)
+    } catch (error) {
+      console.error('Login failed:', error);
+      Alert.alert(
+        '로그인 실패',
+        error.message || '로그인에 실패했습니다. 다시 시도해주세요.',
+        [{ text: '확인' }]
+      );
+    }
   };
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -110,13 +123,20 @@ export default function LoginScreen() {
         {/* 로그인 버튼 */}
         <View style={styles.buttonContainer}>
           <CustomButton
-            title='로그인'
+            title={isLoading ? '로그인 중...' : '로그인'}
             size='large'
             variant='filled'
-            isActive={isFormValid} // 폼이 유효할 때만 활성화
+            isActive={isFormValid && !isLoading} // 폼이 유효하고 로딩 중이 아닐 때만 활성화
             onPress={handleSubmit(onSubmit)}
           />
         </View>
+
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorMessage}>{error}</Text>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -189,5 +209,20 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     paddingBottom: 48,
+  },
+  errorContainer: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  errorMessage: {
+    color: Theme.Colors.error,
+    fontSize: Theme.FontSize.size_14,
+    textAlign: 'center',
+    fontFamily: Theme.FontFamily.pretendard,
   },
 });

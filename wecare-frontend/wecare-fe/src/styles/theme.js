@@ -34,6 +34,10 @@ export const Colors = {
   colorGray: 'rgba(0, 0, 0, 0.25)',
   colorLavender: '#eff0ff',
   colorDimgray: '#60656e',
+  colorKhaki: '#f0e68c',
+  colorLightgray: '#d3d3d3',
+  colorBlack: '#000000',
+  colorWhite: '#ffffff',
   // 버튼배경
   iconDisable: '#374957',
 
@@ -51,6 +55,7 @@ export const FontFamily = {
   nanumL: 'NanumSquareRoundOTFL',
   nanumR: 'NanumSquareRoundOTFR',
   pretendard: 'PretendardVariable',
+  pretendardVariable: 'PretendardVariable',
 };
 
 // 폰트 사이즈
@@ -60,6 +65,7 @@ export const FontSize = {
   size_16: 16,
   size_18: 18,
   size_20: 20,
+  size_22: 22,
   size_24: 24,
   size_28: 28,
   size_32: 32,
@@ -78,6 +84,7 @@ export const LineHeight = {
   32: 36,
   34: 38,
   36: 40,
+  lineHeight_38: 38,
 };
 
 // 간격
@@ -88,6 +95,7 @@ export const Gap = {
   lg: 24,
   xl: 32,
   xxl: 48,
+  gap_2: 2,
   gap_6: 6,
   gap_20: 20,
 };
@@ -102,12 +110,17 @@ export const Padding = {
   xxl: 32,
   p_8: 8,
   p_10: 10,
+  p_12: 12,
   p_30: 30,
+  padding_20: 20,
+  padding_14: 14,
 };
 
 // 테마
 export const BorderRadius = {
   24: 24,
+  br_10: 10,
+  br_6: 6,
 };
 
 export const Theme = {

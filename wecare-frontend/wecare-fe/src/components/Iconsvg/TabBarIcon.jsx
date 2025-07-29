@@ -26,7 +26,8 @@ const iconComponents = {
 };
 
 const TabBarIcon = ({ routeName, focused, size = 24, color }) => {
-  const IconComponent = iconComponents[`${routeName}-${focused ? 'focused' : 'unfocused'}`];
+  const iconKey = `${routeName}-${focused ? 'focused' : 'unfocused'}`;
+  const IconComponent = iconComponents[iconKey];
   if (!IconComponent) {
     console.warn(`❌ Icon not found for key: ${iconKey}`);
     return <View style={{ width: size, height: size }} />;
