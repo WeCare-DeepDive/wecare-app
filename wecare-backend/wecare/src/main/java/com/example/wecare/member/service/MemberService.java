@@ -39,7 +39,7 @@ public class MemberService {
         log.info("getMe - 메소드 호출됨");
         Member currentMember = getCurrentMember();
         // 영속성 컨텍스트에서 엔티티를 새로고침하여 최신 상태를 반영
-        entityManager.refresh(currentMember);
+        // entityManager.refresh(currentMember);
         log.info("getMe - 현재 사용자 정보 조회 완료: {}", currentMember.getUsername());
         return convertToResponse(currentMember);
     }
