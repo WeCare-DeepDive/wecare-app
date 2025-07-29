@@ -30,7 +30,7 @@ export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
   const [error, setError] = useState(null);
   // 로그인 정보
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, setTokens, fetchUserInfo } = useAuthStore();
   console.log('로그인정보 확인: ', isAuthenticated);
 
   useEffect(() => {
@@ -38,6 +38,10 @@ export default function App() {
       try {
         console.log('Starting app preparation...');
         await fetchFonts();
+        
+        // 저장된 토큰 확인 (메모리 기반이므로 앱 재시작 시에는 없음)
+        console.log('App started - no persistent tokens in memory storage');
+        
         console.log('App preparation complete');
       } catch (e) {
         console.error('App preparation error:', e);
