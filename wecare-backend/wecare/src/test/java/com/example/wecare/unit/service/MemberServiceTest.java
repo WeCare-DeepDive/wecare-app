@@ -94,9 +94,6 @@ class MemberServiceTest {
         guardian2.setDependentConnections(g2_dep_conns);
         d1_gua_conns.add(conn3);
         dependent1.setGuardianConnections(d1_gua_conns);
-
-        // EntityManager.refresh() 호출 Mocking
-        doNothing().when(entityManager).refresh(any());
     }
 
     private void mockCurrentUser(Member member) {
