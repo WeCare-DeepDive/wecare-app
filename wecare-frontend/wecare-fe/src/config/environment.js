@@ -1,19 +1,31 @@
+import {
+  DEV_API_BASE_URL,
+  STAGING_API_BASE_URL,
+  PROD_API_BASE_URL,
+  DEV_API_TIMEOUT,
+  STAGING_API_TIMEOUT,
+  PROD_API_TIMEOUT,
+  DEV_LOG_LEVEL,
+  STAGING_LOG_LEVEL,
+  PROD_LOG_LEVEL,
+} from '@env';
+
 // 환경별 설정
 const ENV = {
   development: {
-    API_BASE_URL: 'https://wecare.mobidic.shop',
-    API_TIMEOUT: 10000,
-    LOG_LEVEL: 'debug',
+    API_BASE_URL: DEV_API_BASE_URL,
+    API_TIMEOUT: parseInt(DEV_API_TIMEOUT),
+    LOG_LEVEL: DEV_LOG_LEVEL,
   },
   staging: {
-    API_BASE_URL: 'https://staging.wecare.com',
-    API_TIMEOUT: 15000,
-    LOG_LEVEL: 'info',
+    API_BASE_URL: STAGING_API_BASE_URL,
+    API_TIMEOUT: parseInt(STAGING_API_TIMEOUT),
+    LOG_LEVEL: STAGING_LOG_LEVEL,
   },
   production: {
-    API_BASE_URL: 'https://api.wecare.com',
-    API_TIMEOUT: 20000,
-    LOG_LEVEL: 'error',
+    API_BASE_URL: PROD_API_BASE_URL,
+    API_TIMEOUT: parseInt(PROD_API_TIMEOUT),
+    LOG_LEVEL: PROD_LOG_LEVEL,
   },
 };
 
