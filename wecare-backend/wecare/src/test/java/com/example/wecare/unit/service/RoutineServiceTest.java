@@ -200,7 +200,7 @@ class RoutineServiceTest {
                 .type(RoutineType.MEDICATION)
                 .title("기존 루틴")
                 .startTime(LocalDateTime.now().minusHours(1))
-                .is_repeat(true)
+                .repeat(true)
                 .repeatDays(Arrays.asList(RepeatDay.MON))
                 .guardianMemo("기존 보호자 메모")
                 .dependentMemo("기존 피보호자 메모")
@@ -258,7 +258,7 @@ class RoutineServiceTest {
                 .type(RoutineType.MEDICATION)
                 .title("기존 루틴")
                 .startTime(LocalDateTime.now().minusHours(1))
-                .is_repeat(false)
+                .repeat(false)
                 .guardianMemo("기존 보호자 메모")
                 .dependentMemo("기존 피보호자 메모")
                 .build();
@@ -302,7 +302,7 @@ class RoutineServiceTest {
                 .type(RoutineType.MEDICATION)
                 .title("기존 루틴")
                 .startTime(LocalDateTime.now().minusHours(1))
-                .is_repeat(false)
+                .repeat(false)
                 .guardianMemo("기존 보호자 메모")
                 .dependentMemo("기존 피보호자 메모")
                 .build();
