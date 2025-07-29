@@ -2,7 +2,6 @@ package com.example.wecare.routine.controller;
 
 import com.example.wecare.routine.dto.RoutineRequest;
 import com.example.wecare.routine.dto.RoutineResponse;
-import com.example.wecare.routine.dto.RoutineMemoRequest;
 import com.example.wecare.routine.service.RoutineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -62,13 +61,5 @@ public class RoutineController {
     public ResponseEntity<Void> completeRoutine(@PathVariable Long routineId) {
         routineService.completeRoutine(routineId);
         return ResponseEntity.ok().build();
-    }
-
-    @PatchMapping("/{routineId}/memo")
-    public ResponseEntity<RoutineResponse> updateRoutineMemo(
-            @PathVariable Long routineId,
-            @RequestBody RoutineMemoRequest request) {
-        RoutineResponse response = routineService.updateRoutineMemo(routineId, request);
-        return ResponseEntity.ok(response);
     }
 }

@@ -53,8 +53,8 @@ public class Routine {
     @ElementCollection(targetClass = RepeatDay.class)
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "routine_repeat_days",
-            joinColumns = @JoinColumn(name = "routine_id", foreignKey = @ForeignKey(name = "fk_routine_repeat_days_routine_id")),
-            uniqueConstraints = @UniqueConstraint(name = "pk_routine_repeat_days", columnNames = {"routine_id", "day"}))
+                     joinColumns = @JoinColumn(name = "routine_id", foreignKey = @ForeignKey(name = "fk_routine_repeat_days_routine_id")),
+                     uniqueConstraints = @UniqueConstraint(name = "pk_routine_repeat_days", columnNames = {"routine_id", "day"}))
     @Column(name = "day", nullable = false)
     private List<RepeatDay> repeatDays;
 
@@ -77,10 +77,4 @@ public class Routine {
 
     @Column(nullable = false)
     private boolean completed;
-
-    @Column(name = "guardian_memo", columnDefinition = "TEXT")
-    private String guardianMemo; // 보호자 메모
-
-    @Column(name = "dependent_memo", columnDefinition = "TEXT")
-    private String dependentMemo; // 피보호자 메모
 }
