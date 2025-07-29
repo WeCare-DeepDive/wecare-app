@@ -15,13 +15,13 @@ npm install
 #### 필수 환경변수
 ```env
 # Development Environment
-DEV_API_BASE_URL=[DEV URL]
+DEV_API_BASE_URL=[DEV URL로 수정해주세요!!]
 
 # Staging Environment
-STAGING_API_BASE_URL=[STAGING URL]
+STAGING_API_BASE_URL=[STAGING URL로 수정해주세요!!]
 
 # Production Environment
-PROD_API_BASE_URL=[PROD URL] 
+PROD_API_BASE_URL=[PROD URL로 수정해주세요!!] 
 
 # API Timeout Settings
 DEV_API_TIMEOUT=10000
