@@ -80,7 +80,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: Theme.FontSize.size_24,
     fontFamily: Theme.FontFamily.nanumB,
-    fontWeight: '700',
     lineHeight: Theme.LineHeight[32],
   },
   // Filled 텍스트 - 활성화

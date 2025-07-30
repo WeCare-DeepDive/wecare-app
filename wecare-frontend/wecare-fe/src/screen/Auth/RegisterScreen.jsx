@@ -25,7 +25,7 @@ export default function RegisterScreen() {
             <Image
               style={styles.iconguardian}
               resizeMode='contain'
-              source={require('../../../assets/images/IconDependent.png')}
+              source={require('../../../assets/images/ProfileDependent.png')}
             />
           </Pressable>
           <Text style={[styles.text1, styles.textTypo]}>돌봄을 주고 싶어요</Text>
@@ -40,7 +40,7 @@ export default function RegisterScreen() {
             <Image
               style={styles.iconguardian}
               resizeMode='contain'
-              source={require('../../../assets/images/IconGardian.png')}
+              source={require('../../../assets/images/ProfileProtector.png')}
             />
           </Pressable>
           <Text style={styles.textTypo}>돌봄을 받고 싶어요</Text>
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   },
   text: {
     width: 372,
-    color: Colors.gray10,
+    color: Colors.gray900,
     height: 29,
     textAlign: 'center',
     fontFamily: FontFamily.pretendard,
@@ -79,14 +79,13 @@ const styles = StyleSheet.create({
     fontSize: FontSize.size_20,
   },
   iconguardian: {
-    width: 100,
-    height: 100,
+    width: 140,
+    height: 140,
   },
   iconframe: {
     borderRadius: 999,
     backgroundColor: Colors.colorLavender,
     flexDirection: 'row',
-    padding: Padding.lg,
     alignItems: 'center',
   },
   text1: {
