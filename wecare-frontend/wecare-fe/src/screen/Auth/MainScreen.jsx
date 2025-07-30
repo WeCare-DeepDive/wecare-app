@@ -14,7 +14,7 @@ const MainScreen = () => {
       <View style={styles.content}>
         <View style={styles.logocontainerParent}>
           <View style={styles.faviconContainer}>
-            <Favicon style={styles.favicon} width={200} height={100} />
+            <Favicon style={styles.favicon} width={100} height={100} />
           </View>
           <Text style={styles.title}>WECARE</Text>
           <Text style={styles.subtitle}>언제 어디서나 돌봄이 이어질 수 있도록</Text>
@@ -63,13 +63,12 @@ const styles = StyleSheet.create({
   },
   favicon: {
     borderRadius: 17,
-    marginBottom: 4,
+    marginBottom: 4,    
   },
   title: {
-    fontSize: 30,
-    lineHeight: Theme.LineHeight['24'],
+    fontSize: Theme.FontSize.size_30,
+    lineHeight: Theme.LineHeight['30'],
     fontFamily: Theme.FontFamily.nanumB,
-    // fontWeight: '700',
     letterSpacing: -0.7,
     color: Theme.Colors.customWhite,
     textAlign: 'center',
@@ -79,12 +78,13 @@ const styles = StyleSheet.create({
       height: 4,
     },
     textShadowRadius: 8,
-    marginBottom: 20,
+    marginTop: -10,
+    marginBottom: 10,
   },
   subtitle: {
     fontFamily: Theme.FontFamily.pretendard,
     fontSize: Theme.FontSize.size_18,
-    lineHeight: 29,
+    lineHeight: Theme.LineHeight['29'],
     textAlign: 'center',
     color: Theme.Colors.customWhite,
   },

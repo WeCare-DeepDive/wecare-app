@@ -12,17 +12,19 @@ const FormInput = ({
   errors,
   secureTextEntry = false,
   keyboardType = 'default',
+  fontSize,
+  lineHeight,
   ...otherProps
 }) => {
   return (
     <View style={styles.inputset}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, {fontSize: fontSize, lineHeight: lineHeight}]}>{label}</Text>
       <Controller
         control={control}
         rules={rules}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
-            style={[styles.inputsinputtiltle, errors[name] && styles.inputError]}
+            style={[styles.inputsinputtiltle, errors[name] && styles.inputError, {fontSize: fontSize}]}
             onBlur={onBlur}
             onChangeText={onChange}
             value={value}
@@ -51,9 +53,8 @@ const styles = StyleSheet.create({
     color: Theme.Colors.customBlack,
     textAlign: 'left',
     fontFamily: Theme.FontFamily.pretendard,
-    fontSize: Theme.FontSize.size_18,
-    lineHeight: 22,
     fontWeight: '500',
+    marginBottom: 10,
   },
   inputsinputtiltle: {
     backgroundColor: Theme.Colors.gray1,
@@ -64,7 +65,6 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     borderRadius: 10,
     borderStyle: 'solid',
-    fontSize: Theme.FontSize.size_16,
     fontFamily: Theme.FontFamily.pretendard,
     color: Theme.Colors.customBlack,
   },
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: Theme.Colors.error,
-    fontSize: Theme.FontSize.size_12,
+    fontSize: Theme.FontSize.size_18,
     marginTop: 4,
   },
 });
