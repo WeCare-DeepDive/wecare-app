@@ -45,15 +45,15 @@ const styles = StyleSheet.create({
   },
   view: {
     width: '100%',
-    shadowColor: 'rgba(76, 76, 76, 0.25)',
+    shadowColor: 'rgba(76, 76, 76, 0.5)',
     shadowOffset: {
       width: 0,
       height: 2,
     },
     shadowRadius: 6,
-    elevation: 6,
+    elevation: 4,
     shadowOpacity: 1,
-    height: 56,
+    height: 60,
     paddingHorizontal: 20,
     paddingVertical: 10,
     backgroundColor: Colors.customWhite,
