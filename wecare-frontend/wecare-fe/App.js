@@ -32,8 +32,7 @@ export default function App() {
   const navigationRef = useRef(null);
   
   // 로그인 정보
-  const { isAuthenticated, setTokens, fetchUserInfo, setNavigationRef, forceLogout } = useAuthStore();
-  console.log('로그인정보 확인: ', isAuthenticated);
+  const { isAuthenticated, setNavigationRef, forceLogout } = useAuthStore();
 
   useEffect(() => {
     async function prepare() {
