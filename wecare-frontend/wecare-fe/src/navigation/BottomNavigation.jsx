@@ -66,8 +66,8 @@ export default function BottomNavigation() {
             );
           },
           tabBarStyle: {
-            height: 70, // 탭 바의 높이를 조정
-            paddingVertical: 10, // 상하 여백 조정
+            height: 90, // 탭 바의 높이를 조정
+            paddingTop: 5, // 상하 여백 조정
           },
         })}>
         <Tab.Screen name='Home' component={HomeScreen} />

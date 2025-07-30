@@ -35,12 +35,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.purple300,
   },
   textTypo1: {
-    fontWeight: '700',
-    fontFamily: FontFamily.pretendard,
+    fontFamily: FontFamily.nanumB,
   },
   logoIcon: {
-    width: 32,
-    height: 32,
+    width: 48,
+    height: 48,
   },
   logocontainer: {
     gap: Gap.gap_6 || 6,
@@ -67,7 +66,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: Padding.padding_20 || 20,
     paddingVertical: Padding.padding_14 || 14,
-    backgroundColor: Colors.purple300 || '#d6d8ff',
+    backgroundColor: Colors.customWhite || '#d6d8ff',
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
