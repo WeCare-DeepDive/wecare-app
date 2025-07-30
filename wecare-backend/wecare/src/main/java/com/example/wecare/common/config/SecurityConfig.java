@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import jakarta.servlet.http.HttpServletResponse; // HttpServletResponse import 추가
 
 import java.util.List;
 
@@ -51,7 +52,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                         //.anyRequest().permitAll() // 모든 요청 허용
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint((request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))); // 인증 실패 시 401 응답
         return http.build();
     }
 
