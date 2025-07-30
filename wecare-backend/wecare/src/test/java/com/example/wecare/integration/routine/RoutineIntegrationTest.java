@@ -49,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class RoutineIntegrationTest {
 
     @Autowired
@@ -170,70 +171,18 @@ public class RoutineIntegrationTest {
                         .content(objectMapper.writeValueAsString(acceptRequest)))
                 .andExpect(status().isOk());
 
-        // 7. 관계 설정이 제대로 되었는지 확인 및 보정
-        boolean relationExists = invitationRepository.existsByGuardianIdAndDependentIdAndIsActiveTrue(guardianId, dependentId);
-        System.out.println("초대 코드 수락 후 관계 존재 여부: " + relationExists);
+        // 영속성 컨텍스트를 비우고 엔티티를 다시 로드하여 최신 상태를 반영
+        entityManager.flush();
+        entityManager.clear();
 
-        if (!relationExists) {
-            System.out.println("관계가 없으므로 수동으로 설정합니다.");
-            // 기존 관계 확인
-            Optional<Invitation> existingInvitation = invitationRepository.findById(new InvitationId(guardianId, dependentId));
-
-            if (existingInvitation.isPresent()) {
-                Invitation invitation = existingInvitation.get();
-                invitation.setActive(true);
-                invitationRepository.save(invitation);
-                System.out.println("기존 관계를 활성화했습니다.");
-            } else {
-                // 새로운 관계 설정
-                guardian = memberRepository.findById(guardianId).orElseThrow();
-                dependent = memberRepository.findById(dependentId).orElseThrow();
-
-                Invitation invitation = Invitation.builder()
-                        .guardian(guardian)
-                        .dependent(dependent)
-                        .isActive(true)
-                        .relationshipType(RelationshipType.PARENT)
-                        .build();
-                invitationRepository.saveAndFlush(invitation);
-                System.out.println("새로운 관계를 생성했습니다.");
-            }
-
-            // 저장 후 엔티티 새로고침
-            entityManager.flush();
-            entityManager.clear();
-
-            // 관계 재확인
-            relationExists = invitationRepository.existsByGuardianIdAndDependentIdAndIsActiveTrue(guardianId, dependentId);
-            System.out.println("수동 설정 후 관계 존재 여부: " + relationExists);
-        }
+        // guardian과 dependent 엔티티를 다시 로드하여 최신 연결 상태를 가져옴
+        guardian = memberRepository.findById(guardianId).orElseThrow();
+        dependent = memberRepository.findById(dependentId).orElseThrow();
     }
 
     @Test
     @DisplayName("루틴 생성 - 디버깅 테스트")
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void createRoutine_Debug() throws Exception {
-        // 트랜잭션 분리하여 데이터베이스 상태 확인
-        TransactionTemplate template = new TransactionTemplate(transactionManager);
-        template.execute(status -> {
-            // 모든 관계 조회
-            List<Invitation> invitations = invitationRepository.findAll();
-            System.out.println("======= 데이터베이스에 존재하는 관계 =======");
-            for (Invitation invitation : invitations) {
-                System.out.printf("보호자 ID: %d, 피보호자 ID: %d, 활성화: %b, 관계유형: %s%n",
-                        invitation.getGuardian().getId(),
-                        invitation.getDependent().getId(),
-                        invitation.isActive(),
-                        invitation.getRelationshipType());
-            }
-
-            // 특정 관계 확인
-            boolean relationExists = invitationRepository.existsByGuardianIdAndDependentIdAndIsActiveTrue(guardianId, dependentId);
-            System.out.printf("guardianId=%d, dependentId=%d 관계 존재여부: %b%n", guardianId, dependentId, relationExists);
-
-            return null;
-        });
-
         // 루틴 생성 요청 객체 준비
         RoutineRequest routineRequest = RoutineRequest.builder()
                 .type(RoutineType.valueOf("ACTIVITY"))
@@ -244,30 +193,6 @@ public class RoutineIntegrationTest {
                 .repeat(true)
                 .repeatDays(asList(RepeatDay.MON, RepeatDay.TUE, RepeatDay.WED, RepeatDay.THU, RepeatDay.FRI))
                 .build();
-
-        // 수동으로 관계 재설정
-        template.execute(status -> {
-            Member guardian = memberRepository.findById(guardianId).orElseThrow();
-            Member dependent = memberRepository.findById(dependentId).orElseThrow();
-
-            // 기존 관계 삭제
-            Optional<Invitation> existingInvitation = invitationRepository.findById(new InvitationId(guardianId, dependentId));
-            if (existingInvitation.isPresent()) {
-                invitationRepository.delete(existingInvitation.get());
-            }
-
-            // 새로운 관계 생성
-            Invitation invitation = Invitation.builder()
-                    .guardian(guardian)
-                    .dependent(dependent)
-                    .isActive(true)
-                    .relationshipType(RelationshipType.PARENT)
-                    .build();
-            invitationRepository.saveAndFlush(invitation);
-
-            System.out.println("관계를 다시 설정했습니다.");
-            return null;
-        });
 
         // 토큰 정보 출력
         System.out.println("요청에 사용될 보호자 토큰: " + (guardianToken != null ? guardianToken.substring(0, 20) + "..." : "null"));
@@ -292,36 +217,7 @@ public class RoutineIntegrationTest {
 
     @Test
     @DisplayName("루틴 생성 - 성공")
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void createRoutine_Success() throws Exception {
-        // 관계 검증 및 설정
-        TransactionTemplate template = new TransactionTemplate(transactionManager);
-        template.execute(status -> {
-            boolean relationExists = invitationRepository.existsByGuardianIdAndDependentIdAndIsActiveTrue(guardianId, dependentId);
-
-            if (!relationExists) {
-                System.out.println("guardianId=" + guardianId + ", dependentId=" + dependentId + " 관계가 없으므로 설정합니다.");
-                Member guardian = memberRepository.findById(guardianId).orElseThrow();
-                Member dependent = memberRepository.findById(dependentId).orElseThrow();
-
-                Invitation invitation = Invitation.builder()
-                        .guardian(guardian)
-                        .dependent(dependent)
-                        .isActive(true)
-                        .relationshipType(RelationshipType.PARENT)
-                        .build();
-                invitationRepository.saveAndFlush(invitation);
-
-                // 관계 생성 확인
-                relationExists = invitationRepository.existsByGuardianIdAndDependentIdAndIsActiveTrue(guardianId, dependentId);
-                System.out.println("관계 설정 후 존재 여부: " + relationExists);
-            } else {
-                System.out.println("유효한 관계가 이미 존재합니다.");
-            }
-
-            return null;
-        });
-
         // 루틴 요청 객체 생성
         RoutineRequest routineRequest = RoutineRequest.builder()
                 .type(RoutineType.valueOf("ACTIVITY"))
@@ -342,23 +238,20 @@ public class RoutineIntegrationTest {
                 .andReturn();
 
         // 생성된 루틴 확인
-        template.execute(status -> {
-            List<Routine> routines = routineRepository.findAll();
-            if (!routines.isEmpty()) {
-                Routine createdRoutine = routines.get(0);
-                System.out.printf("생성된 루틴: ID=%d, 제목=%s, 보호자ID=%d, 피보호자ID=%d%n",
-                        createdRoutine.getId(),
-                        createdRoutine.getTitle(),
-                        createdRoutine.getGuardian().getId(),
-                        createdRoutine.getDependent().getId());
+        List<Routine> routines = routineRepository.findAll();
+        if (!routines.isEmpty()) {
+            Routine createdRoutine = routines.get(0);
+            System.out.printf("생성된 루틴: ID=%d, 제목=%s, 보호자ID=%d, 피보호자ID=%d%n",
+                    createdRoutine.getId(),
+                    createdRoutine.getTitle(),
+                    createdRoutine.getGuardian().getId(),
+                    createdRoutine.getDependent().getId());
 
-                // 검증
-                assertThat(createdRoutine.getGuardian().getId()).isEqualTo(guardianId);
-                assertThat(createdRoutine.getDependent().getId()).isEqualTo(dependentId);
-                assertThat(createdRoutine.getTitle()).isEqualTo("산책하기");
-            }
-            return null;
-        });
+            // 검증
+            assertThat(createdRoutine.getGuardian().getId()).isEqualTo(guardianId);
+            assertThat(createdRoutine.getDependent().getId()).isEqualTo(dependentId);
+            assertThat(createdRoutine.getTitle()).isEqualTo("산책하기");
+        }
     }
 
     @Test

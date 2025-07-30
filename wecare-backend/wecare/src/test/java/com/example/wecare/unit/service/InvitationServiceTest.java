@@ -79,7 +79,7 @@ class InvitationServiceTest {
     @DisplayName("역할에 관계없이 초대 코드 생성 성공")
     void generateInvitationCode_byAnyRole_success() {
         // given
-        when(memberService.getCurrentMember()).thenReturn(guardian); // memberService Mocking
+        when(memberService.getLoggedInMember()).thenReturn(guardian); // memberService Mocking
 
         // when
         String invitationCode = invitationService.generateInvitationCode();
@@ -95,7 +95,7 @@ class InvitationServiceTest {
     void acceptInvitationCode_dependentAcceptsGuardianCode_success() {
         // given
         String validCode = "VALID123";
-        when(memberService.getCurrentMember()).thenReturn(dependent); // memberService Mocking
+        when(memberService.getLoggedInMember()).thenReturn(dependent); // memberService Mocking
         mockMemberFindByIdWithPessimisticLock(guardian);
 
         when(redisService.getValues("INVITE:" + validCode)).thenReturn(guardian.getId().toString());
@@ -121,7 +121,7 @@ class InvitationServiceTest {
     void acceptInvitationCode_guardianAcceptsDependentCode_success() {
         // given
         String validCode = "VALID456";
-        when(memberService.getCurrentMember()).thenReturn(guardian); // memberService Mocking
+        when(memberService.getLoggedInMember()).thenReturn(guardian); // memberService Mocking
         mockMemberFindByIdWithPessimisticLock(dependent);
 
         when(redisService.getValues("INVITE:" + validCode)).thenReturn(dependent.getId().toString());
@@ -147,7 +147,7 @@ class InvitationServiceTest {
     void acceptInvitationCode_fail_withInvalidCode() {
         // given
         String invalidCode = "INVALID123";
-        when(memberService.getCurrentMember()).thenReturn(dependent); // memberService Mocking
+        when(memberService.getLoggedInMember()).thenReturn(dependent); // memberService Mocking
 
         when(redisService.getValues("INVITE:" + invalidCode)).thenReturn(null);
 
@@ -162,7 +162,7 @@ class InvitationServiceTest {
     void acceptInvitationCode_fail_whenAlreadyActiveConnected() {
         // given
         String validCode = "VALID123";
-        when(memberService.getCurrentMember()).thenReturn(dependent); // memberService Mocking
+        when(memberService.getLoggedInMember()).thenReturn(dependent); // memberService Mocking
         mockMemberFindByIdWithPessimisticLock(guardian);
 
         when(redisService.getValues("INVITE:" + validCode)).thenReturn(guardian.getId().toString());
@@ -179,7 +179,7 @@ class InvitationServiceTest {
     void acceptInvitationCode_fail_withSameRole() {
         // given
         String validCode = "VALID789";
-        when(memberService.getCurrentMember()).thenReturn(guardian); // memberService Mocking
+        when(memberService.getLoggedInMember()).thenReturn(guardian); // memberService Mocking
         mockMemberFindByIdWithPessimisticLock(otherGuardian);
 
         when(redisService.getValues("INVITE:" + validCode)).thenReturn(otherGuardian.getId().toString());
@@ -195,7 +195,7 @@ class InvitationServiceTest {
     void acceptInvitationCode_fail_withOwnCode() {
         // given
         String ownCode = "OWNCODE1";
-        when(memberService.getCurrentMember()).thenReturn(guardian); // memberService Mocking
+        when(memberService.getLoggedInMember()).thenReturn(guardian); // memberService Mocking
 
         when(redisService.getValues("INVITE:" + ownCode)).thenReturn(guardian.getId().toString());
 
@@ -209,7 +209,7 @@ class InvitationServiceTest {
     @DisplayName("연결 삭제 성공 - isActive가 false로 변경되어야 한다.")
     void deleteConnection_success() {
         // given
-        when(memberService.getCurrentMember()).thenReturn(guardian); // memberService Mocking
+        when(memberService.getLoggedInMember()).thenReturn(guardian); // memberService Mocking
         mockMemberFindByIdWithPessimisticLock(dependent);
 
         Invitation existingInvitation = Invitation.builder()
@@ -236,7 +236,7 @@ class InvitationServiceTest {
     @DisplayName("연결 삭제 실패 - 존재하지 않는 연결")
     void deleteConnection_fail_notExist() {
         // given
-        when(memberService.getCurrentMember()).thenReturn(guardian); // memberService Mocking
+        when(memberService.getLoggedInMember()).thenReturn(guardian); // memberService Mocking
         mockMemberFindByIdWithPessimisticLock(dependent);
 
         when(invitationRepository.findById(new InvitationId(guardian.getId(), dependent.getId()))).thenReturn(Optional.empty());
@@ -251,7 +251,7 @@ class InvitationServiceTest {
     @DisplayName("연결 삭제 실패 - 이미 비활성화된 연결")
     void deleteConnection_fail_alreadyInactive() {
         // given
-        when(memberService.getCurrentMember()).thenReturn(guardian); // memberService Mocking
+        when(memberService.getLoggedInMember()).thenReturn(guardian); // memberService Mocking
         mockMemberFindByIdWithPessimisticLock(dependent);
 
         Invitation existingInvitation = Invitation.builder()

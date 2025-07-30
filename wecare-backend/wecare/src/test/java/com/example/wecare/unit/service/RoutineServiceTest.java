@@ -184,7 +184,7 @@ class RoutineServiceTest {
         // when & then
         assertThatThrownBy(() -> routineService.createRoutine(anotherDependent.getId(), request))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessage("해당 피보호자에 대한 루틴을 생성할 권한이 없습니다.");
+                .hasMessage("해당 피보호자에 대한 루틴을 생성할 권한이 없습니다. 활성화된 연결이 필요합니다.");
     }
 
     // --- 루틴 수정 테스트 ---
@@ -417,7 +417,7 @@ class RoutineServiceTest {
         // when & then
         assertThatThrownBy(() -> routineService.getRoutineById(routine.getId()))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessage("해당 루틴에 접근할 권한이 없습니다.");
+                .hasMessage("해당 루틴에 접근할 권한이 없습니다. 활성화된 연결이 필요합니다.");
     }
 
     // --- 루틴 삭제 테스트 ---
@@ -606,6 +606,6 @@ class RoutineServiceTest {
         // when & then
         assertThatThrownBy(() -> routineService.updateRoutineMemo(existingRoutine.getId(), request))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessage("해당 루틴에 접근할 권한이 없습니다.");
+                .hasMessage("해당 루틴에 접근할 권한이 없습니다. 활성화된 연결이 필요합니다.");
     }
 }

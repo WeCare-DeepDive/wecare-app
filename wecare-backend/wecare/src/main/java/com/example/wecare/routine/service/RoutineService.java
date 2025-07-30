@@ -56,10 +56,10 @@ public class RoutineService {
         }
 
         boolean isConnected = guardian.getDependentConnections().stream()
-                .anyMatch(conn -> conn.getDependent().getId().equals(dependentId));
+                .anyMatch(conn -> conn.getDependent().getId().equals(dependentId) && conn.isActive());
 
         if (!isConnected) {
-            throw new AccessDeniedException("해당 피보호자에 대한 루틴을 생성할 권한이 없습니다.");
+            throw new AccessDeniedException("해당 피보호자에 대한 루틴을 생성할 권한이 없습니다. 활성화된 연결이 필요합니다.");
         }
 
         Routine routine = Routine.builder()
@@ -110,6 +110,8 @@ public class RoutineService {
         }
         List<Routine> routines = routineRepository.findByGuardianId(currentMember.getId());
         return routines.stream()
+                .filter(routine -> currentMember.getDependentConnections().stream()
+                        .anyMatch(conn -> conn.getDependent().getId().equals(routine.getDependent().getId()) && conn.isActive())) // isActive() 검증 추가
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
@@ -121,6 +123,8 @@ public class RoutineService {
         }
         List<Routine> routines = routineRepository.findByDependentId(currentMember.getId());
         return routines.stream()
+                .filter(routine -> currentMember.getGuardianConnections().stream()
+                        .anyMatch(conn -> conn.getGuardian().getId().equals(routine.getGuardian().getId()) && conn.isActive())) // isActive() 검증 추가
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
@@ -262,14 +266,14 @@ public class RoutineService {
 
         boolean isGuardian = currentMember.getRole() == Role.GUARDIAN &&
                 currentMember.getDependentConnections().stream()
-                        .anyMatch(conn -> conn.getDependent().getId().equals(routine.getDependent().getId()));
+                        .anyMatch(conn -> conn.getDependent().getId().equals(routine.getDependent().getId()) && conn.isActive());
 
         boolean isDependent = currentMember.getRole() == Role.DEPENDENT &&
                 currentMember.getGuardianConnections().stream()
-                        .anyMatch(conn -> conn.getGuardian().getId().equals(routine.getGuardian().getId()));
+                        .anyMatch(conn -> conn.getGuardian().getId().equals(routine.getGuardian().getId()) && conn.isActive());
 
         if (!isGuardian && !isDependent) {
-            throw new AccessDeniedException("해당 루틴에 접근할 권한이 없습니다.");
+            throw new AccessDeniedException("해당 루틴에 접근할 권한이 없습니다. 활성화된 연결이 필요합니다.");
         }
         return routine;
     }

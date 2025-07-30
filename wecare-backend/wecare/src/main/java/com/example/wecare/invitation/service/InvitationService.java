@@ -34,7 +34,7 @@ public class InvitationService {
 
     @Transactional
     public String generateInvitationCode() {
-        Member currentMember = memberService.getCurrentMember(); // MemberService를 통해 현재 사용자 정보 가져오기
+        Member currentMember = memberService.getLoggedInMember(); // MemberService를 통해 현재 사용자 정보 가져오기
         Long currentUserId = currentMember.getId(); // Member 객체에서 ID 가져옴
         log.info("generateInvitationCode - 초대 코드 생성 요청 사용자 ID: {}", currentUserId);
 
@@ -48,7 +48,7 @@ public class InvitationService {
 
     @Transactional
     public void acceptInvitationCode(String code, RelationshipType relationshipType) {
-        Member currentUser = memberService.getCurrentMember(); // MemberService를 통해 현재 사용자 정보 가져오기
+        Member currentUser = memberService.getLoggedInMember(); // MemberService를 통해 현재 사용자 정보 가져오기
         Long currentUserId = currentUser.getId(); // Member 객체에서 ID 가져옴
         log.info("acceptInvitationCode - 초대 코드 수락 요청 사용자 ID: {}", currentUserId);
 
@@ -103,7 +103,7 @@ public class InvitationService {
 
     @Transactional
     public void deleteConnection(Long targetUserId) {
-        Member currentUser = memberService.getCurrentMember(); // MemberService를 통해 현재 사용자 정보 가져오기
+        Member currentUser = memberService.getLoggedInMember(); // MemberService를 통해 현재 사용자 정보 가져오기
         Long currentUserId = currentUser.getId(); // Member 객체에서 ID 가져옴
         log.info("deleteConnection - 연결 삭제 요청 사용자 ID: {}", currentUserId);
 
@@ -128,6 +128,7 @@ public class InvitationService {
         Invitation invitation = invitationRepository.findById(new com.example.wecare.invitation.domain.InvitationId(guardianInConnection.getId(), dependentInConnection.getId()))
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 연결입니다."));
 
+        log.info("deleteConnection - Before setActive(false), invitation.isActive(): {}", invitation.isActive()); // 추가
         // 활성화된 연결인지 확인
         if (!invitation.isActive()) {
             throw new IllegalArgumentException("이미 비활성화된 연결입니다.");
@@ -135,7 +136,10 @@ public class InvitationService {
 
         // 소프트 삭제
         invitation.setActive(false);
+        log.info("deleteConnection - After setActive(false), invitation.isActive(): {}", invitation.isActive()); // 추가
         invitationRepository.save(invitation);
+        entityManager.flush(); // 이 줄을 추가합니다.
+        log.info("deleteConnection - After save(invitation) and flush"); // 로그 메시지 변경
 
         // 연결된 Member 엔티티의 컬렉션을 새로고침하여 최신 상태 반영
         entityManager.refresh(guardianInConnection);
@@ -144,7 +148,7 @@ public class InvitationService {
 
     @Transactional
     public void reactivateConnection(Long targetUserId) {
-        Member currentUser = memberService.getCurrentMember();
+        Member currentUser = memberService.getLoggedInMember(); // MemberService를 통해 현재 사용자 정보 가져오기
         Long currentUserId = currentUser.getId();
         log.info("reactivateConnection - 연결 활성화 요청 사용자 ID: {}", currentUserId);
 
@@ -167,12 +171,16 @@ public class InvitationService {
         Invitation invitation = invitationRepository.findById(new com.example.wecare.invitation.domain.InvitationId(guardianInConnection.getId(), dependentInConnection.getId()))
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 연결입니다."));
 
+        log.info("reactivateConnection - Before setActive(true), invitation.isActive(): {}", invitation.isActive()); // 추가
         if (invitation.isActive()) {
             throw new IllegalArgumentException("이미 활성화된 연결입니다.");
         }
 
         invitation.setActive(true);
+        log.info("reactivateConnection - After setActive(true), invitation.isActive(): {}", invitation.isActive()); // 추가
         invitationRepository.save(invitation);
+        entityManager.flush(); // 이 줄을 추가합니다.
+        log.info("reactivateConnection - After save(invitation) and flush"); // 로그 메시지 변경
 
         // 연결된 Member 엔티티의 컬렉션을 새로고침하여 최신 상태 반영
         entityManager.refresh(guardianInConnection);
