@@ -100,7 +100,7 @@ class MemberServiceTest {
         // SecurityUtil.getCurrentMemberId()는 static 메소드이므로 mockStatic으로 처리
         // 이 메소드는 테스트 메소드 내에서 try-with-resources로 감싸져야 합니다.
         // when(securityUtil.getCurrentMemberId()).thenReturn(member.getId()); // 더 이상 필요 없음
-        when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+        when(memberRepository.findByIdWithConnections(member.getId())).thenReturn(Optional.of(member));
     }
 
     @Test
