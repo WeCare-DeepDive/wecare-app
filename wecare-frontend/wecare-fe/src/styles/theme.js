@@ -71,22 +71,26 @@ export const FontSize = {
   size_22: 22,
   size_24: 24,
   size_28: 28,
+  size_30: 30,
   size_32: 32,
   size_36: 36,
 };
 
 // 라인 높이
-export const LineHeight = {
-  12: 16,
-  14: 18,
-  16: 20,
-  18: 22,
-  20: 24,
-  24: 28,
-  28: 32,
-  32: 36,
-  34: 38,
-  36: 40,
+export const LineHeight = {  
+  12: 12,
+  14: 14,
+  16: 16,
+  18: 18,
+  20: 20,
+  22: 22,
+  24: 24,
+  28: 28,
+  30: 30,
+  32: 32,
+  34: 34,
+  38: 38,
+  40: 40,  
   lineHeight_38: 38,
 };
 
@@ -101,6 +105,8 @@ export const Gap = {
   gap_2: 2,
   gap_6: 6,
   gap_20: 20,
+  gap_8: 8,   // 추가
+  gap_10: 10, // 추가
 };
 
 // 패딩
@@ -117,6 +123,7 @@ export const Padding = {
   p_30: 30,
   padding_20: 20,
   padding_14: 14,
+  p_20: 20,  // 추가
 };
 
 // 테마
