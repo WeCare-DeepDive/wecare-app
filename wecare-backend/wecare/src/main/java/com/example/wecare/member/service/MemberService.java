@@ -5,6 +5,8 @@ import com.example.wecare.invitation.domain.Invitation;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.dto.MemberResponse;
+import com.example.wecare.member.dto.MemberRelationshipDto;
+import com.example.wecare.invitation.domain.RelationshipType;
 import com.example.wecare.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -123,5 +125,32 @@ public class MemberService {
                 .collect(Collectors.toList());
         log.debug("getMyDependentsList - 반환되는 피보호자 수: {}", result.size());
         return result;
+    }
+
+    // 현재 로그인한 사용자와 연결된 모든 관계 정보를 조회
+    public List<MemberRelationshipDto> getMemberRelationships() {
+        log.info("getMemberRelationships - 메소드 호출됨");
+        Member currentMember = getCurrentMember();
+        entityManager.refresh(currentMember);
+
+        List<MemberRelationshipDto> relationships = new java.util.ArrayList<>();
+
+        if (currentMember.getRole() == Role.DEPENDENT) {
+            currentMember.getGuardianConnections().forEach(invitation -> {
+                relationships.add(MemberRelationshipDto.builder()
+                        .memberId(invitation.getGuardian().getId())
+                        .relationshipType(invitation.getRelationshipType().name())
+                        .build());
+            });
+        } else if (currentMember.getRole() == Role.GUARDIAN) {
+            currentMember.getDependentConnections().forEach(invitation -> {
+                relationships.add(MemberRelationshipDto.builder()
+                        .memberId(invitation.getDependent().getId())
+                        .relationshipType(invitation.getRelationshipType().name())
+                        .build());
+            });
+        }
+        log.info("getMemberRelationships - 반환되는 관계 수: {}", relationships.size());
+        return relationships;
     }
 }
