@@ -7,30 +7,30 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+@RequiredArgsConstructor
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class AuthAuthenticationEntryPoint implements AuthenticationEntryPoint {
-    //401
+public class AuthAccessDeniedHandler implements AccessDeniedHandler {
+    //403
     private final ObjectMapper objectMapper;
 
     @Override
-    public void commence(HttpServletRequest request,
-                         HttpServletResponse response,
-                         AuthenticationException authException) throws IOException {
+    public void handle(HttpServletRequest request,
+                       HttpServletResponse response,
+                       AccessDeniedException accessDeniedException) throws IOException {
         log.error("errorCode : {}, uri : {}, message : {}",
-                authException, request.getRequestURI(), authException.getMessage());
+                accessDeniedException, request.getRequestURI(), accessDeniedException.getMessage());
 
-        String responseBody = objectMapper.writeValueAsString("인증되지 않은 접근입니다.");
+        String responseBody = objectMapper.writeValueAsString("인가되지 않은 접근입니다.");
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(responseBody);
     }
