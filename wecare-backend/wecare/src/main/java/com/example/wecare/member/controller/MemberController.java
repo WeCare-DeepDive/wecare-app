@@ -1,6 +1,7 @@
 package com.example.wecare.member.controller;
 
 import com.example.wecare.member.dto.MemberResponse;
+import com.example.wecare.member.dto.MemberRelationshipDto;
 import com.example.wecare.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,5 +23,12 @@ public class MemberController {
     public ResponseEntity<MemberResponse> getMe() {
         MemberResponse memberResponse = memberService.getMe();
         return ResponseEntity.ok(memberResponse);
+    }
+
+    // 현재 로그인한 사용자와 연결된 모든 관계 정보를 조회
+    @GetMapping("/me/relationships")
+    public ResponseEntity<List<MemberRelationshipDto>> getMyRelationships() {
+        List<MemberRelationshipDto> relationships = memberService.getMemberRelationships();
+        return ResponseEntity.ok(relationships);
     }
 }

@@ -5,10 +5,11 @@ import com.example.wecare.invitation.domain.Invitation;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.dto.MemberResponse;
+import com.example.wecare.member.dto.MemberRelationshipDto;
+import com.example.wecare.invitation.domain.RelationshipType;
 import com.example.wecare.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager; // EntityManager 임포트 추가
@@ -27,11 +28,15 @@ public class MemberService {
     private final EntityManager entityManager; // EntityManager 주입
 
     // 현재 로그인한 사용자의 전체 정보(Member 엔티티 객체)를 데이터베이스에서 조회
-    public Member getCurrentMember() { // private -> public 변경
+    private Member getCurrentMember() {
         Long memberId = SecurityUtil.getCurrentMemberId(); // SecurityUtil을 통해 memberId 가져오기
         log.info("getCurrentMember (MemberService) - 조회할 사용자 ID: {}", memberId);
-        return memberRepository.findById(memberId)
+        return memberRepository.findByIdWithConnections(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("현재 로그인된 사용자를 찾을 수 없습니다. ID: " + memberId));
+    }
+
+    public Member getLoggedInMember() {
+        return getCurrentMember();
     }
 
     // 현재 로그인한 사용자 본인의 정보를 조회
@@ -52,11 +57,11 @@ public class MemberService {
         if (member.getRole() == Role.DEPENDENT) {
             log.debug("convertToResponse - 피보호자 역할, 보호자 목록 조회 시작");
             guardians = getMyGuardians(member);
-            log.debug("convertToResponse - 보호자 목록 조회 완료: {}명", guardians != null ? guardians.size() : 0);
+            log.debug("convertToResponse - 보호자 목록 조회 완료: {}명", guardians.size());
         } else if (member.getRole() == Role.GUARDIAN) {
             log.debug("convertToResponse - 보호자 역할, 피보호자 목록 조회 시작");
             dependents = getMyDependentsList(member);
-            log.debug("convertToResponse - 피보호자 목록 조회 완료: {}명", dependents != null ? dependents.size() : 0);
+            log.debug("convertToResponse - 피보호자 목록 조회 완료: {}명", dependents.size());
         }
 
         return MemberResponse.builder()
@@ -104,6 +109,7 @@ public class MemberService {
             return Collections.emptyList();
         }
         List<MemberResponse> result = guardian.getDependentConnections().stream()
+                
                 .map(invitation -> {
                     Member dependentMember = invitation.getDependent();
                     return MemberResponse.builder()
@@ -119,5 +125,32 @@ public class MemberService {
                 .collect(Collectors.toList());
         log.debug("getMyDependentsList - 반환되는 피보호자 수: {}", result.size());
         return result;
+    }
+
+    // 현재 로그인한 사용자와 연결된 모든 관계 정보를 조회
+    public List<MemberRelationshipDto> getMemberRelationships() {
+        log.info("getMemberRelationships - 메소드 호출됨");
+        Member currentMember = getCurrentMember();
+        entityManager.refresh(currentMember);
+
+        List<MemberRelationshipDto> relationships = new java.util.ArrayList<>();
+
+        if (currentMember.getRole() == Role.DEPENDENT) {
+            currentMember.getGuardianConnections().forEach(invitation -> {
+                relationships.add(MemberRelationshipDto.builder()
+                        .memberId(invitation.getGuardian().getId())
+                        .relationshipType(invitation.getRelationshipType().name())
+                        .build());
+            });
+        } else if (currentMember.getRole() == Role.GUARDIAN) {
+            currentMember.getDependentConnections().forEach(invitation -> {
+                relationships.add(MemberRelationshipDto.builder()
+                        .memberId(invitation.getDependent().getId())
+                        .relationshipType(invitation.getRelationshipType().name())
+                        .build());
+            });
+        }
+        log.info("getMemberRelationships - 반환되는 관계 수: {}", relationships.size());
+        return relationships;
     }
 }

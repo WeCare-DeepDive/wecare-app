@@ -7,12 +7,11 @@ import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.repository.MemberRepository;
 import com.example.wecare.routine.domain.RepeatDay;
 import com.example.wecare.routine.domain.Routine;
-import com.example.wecare.routine.domain.RoutineAlarmSetting;
+import com.example.wecare.routine.domain.NotificationType;
+import com.example.wecare.routine.domain.SoundType;
 import com.example.wecare.routine.domain.RoutineType;
 import com.example.wecare.routine.dto.RoutineRequest;
-import com.example.wecare.routine.dto.RoutineResponse;
 import com.example.wecare.routine.dto.RoutineMemoRequest;
-import com.example.wecare.routine.repository.RoutineAlarmSettingRepository;
 import com.example.wecare.routine.repository.RoutineRepository;
 import com.example.wecare.routine.service.RoutineService;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,9 +49,6 @@ class RoutineServiceTest {
 
     @Mock
     private MemberRepository memberRepository;
-
-    @Mock
-    private RoutineAlarmSettingRepository routineAlarmSettingRepository;
 
     @Mock
     private SecurityContext securityContext;
@@ -102,17 +98,17 @@ class RoutineServiceTest {
         mockCurrentUser(guardian);
         when(memberRepository.findById(dependent.getId())).thenReturn(Optional.of(dependent));
         when(routineRepository.save(any(Routine.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(routineAlarmSettingRepository.save(any(RoutineAlarmSetting.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         RoutineRequest request = RoutineRequest.builder()
                 .type(RoutineType.MEDICATION)
                 .title("약 먹기 루틴")
                 .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
                 .repeat(true)
                 .repeatDays(Arrays.asList(RepeatDay.MON, RepeatDay.WED, RepeatDay.FRI))
-                .alertBeforeStartMin(10)
-                .alertBeforeEndMin(5)
-                .repeatIntervalMin(30)
+                .isEnabled(true)
+                .notificationType(NotificationType.EVERY_30_MINUTES)
+                .soundType(SoundType.DEFAULT_SOUND)
                 .build();
 
         // when
@@ -123,10 +119,9 @@ class RoutineServiceTest {
         verify(routineRepository, times(1)).save(routineCaptor.capture());
         Routine savedRoutine = routineCaptor.getValue();
 
-        assertThat(savedRoutine.getAlarmSetting()).isNotNull();
-        assertThat(savedRoutine.getAlarmSetting().getAlertBeforeStartMin()).isEqualTo(10);
-        assertThat(savedRoutine.getAlarmSetting().getAlertBeforeEndMin()).isEqualTo(5);
-        assertThat(savedRoutine.getAlarmSetting().getRepeatIntervalMin()).isEqualTo(30);
+        assertThat(savedRoutine.isEnabled()).isTrue();
+        assertThat(savedRoutine.getNotificationType()).isEqualTo(NotificationType.EVERY_30_MINUTES);
+        assertThat(savedRoutine.getSoundType()).isEqualTo(SoundType.DEFAULT_SOUND);
         assertThat(savedRoutine.getRepeatDays()).containsExactlyInAnyOrder(RepeatDay.MON, RepeatDay.WED, RepeatDay.FRI);
     }
 
@@ -142,7 +137,10 @@ class RoutineServiceTest {
                 .type(RoutineType.ACTIVITY)
                 .title("운동 루틴")
                 .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
                 .repeat(false)
+                .isEnabled(false)
+                .notificationType(NotificationType.NONE)
                 .build();
 
         // when
@@ -153,7 +151,8 @@ class RoutineServiceTest {
         verify(routineRepository, times(1)).save(routineCaptor.capture());
         Routine savedRoutine = routineCaptor.getValue();
 
-        assertThat(savedRoutine.getAlarmSetting()).isNull();
+        assertThat(savedRoutine.isEnabled()).isFalse();
+        assertThat(savedRoutine.getNotificationType()).isEqualTo(NotificationType.NONE);
     }
 
     @Test
@@ -161,7 +160,12 @@ class RoutineServiceTest {
     void createRoutine_Fail_WhenDependentTries() {
         // given
         mockCurrentUser(dependent);
-        RoutineRequest request = new RoutineRequest();
+        RoutineRequest request = RoutineRequest.builder()
+                .type(RoutineType.MEDICATION)
+                .title("테스트 루틴")
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
+                .build();
 
         // when & then
         assertThatThrownBy(() -> routineService.createRoutine(dependent.getId(), request))
@@ -179,12 +183,17 @@ class RoutineServiceTest {
 
         when(memberRepository.findById(anotherDependent.getId())).thenReturn(Optional.of(anotherDependent));
 
-        RoutineRequest request = new RoutineRequest();
+        RoutineRequest request = RoutineRequest.builder()
+                .type(RoutineType.MEDICATION)
+                .title("테스트 루틴")
+                .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
+                .build();
 
         // when & then
         assertThatThrownBy(() -> routineService.createRoutine(anotherDependent.getId(), request))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessage("해당 피보호자에 대한 루틴을 생성할 권한이 없습니다.");
+                .hasMessage("해당 피보호자에 대한 루틴을 생성할 권한이 없습니다. 활성화된 연결이 필요합니다.");
     }
 
     // --- 루틴 수정 테스트 ---
@@ -200,31 +209,29 @@ class RoutineServiceTest {
                 .type(RoutineType.MEDICATION)
                 .title("기존 루틴")
                 .startTime(LocalDateTime.now().minusHours(1))
-                .is_repeat(true)
+                .repeat(true)
                 .repeatDays(Arrays.asList(RepeatDay.MON))
+                .isEnabled(true)
+                .notificationType(NotificationType.ON_START_TIME)
+                .soundType(SoundType.DEFAULT_SOUND)
                 .guardianMemo("기존 보호자 메모")
                 .dependentMemo("기존 피보호자 메모")
                 .build();
-        RoutineAlarmSetting existingAlarmSetting = RoutineAlarmSetting.builder()
-                .id(100L)
-                .routine(existingRoutine)
-                .alertBeforeStartMin(10)
-                .build();
-        existingRoutine.setAlarmSetting(existingAlarmSetting);
 
         when(routineRepository.findById(existingRoutine.getId())).thenReturn(Optional.of(existingRoutine));
         when(routineRepository.save(any(Routine.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(routineAlarmSettingRepository.save(any(RoutineAlarmSetting.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         RoutineRequest request = RoutineRequest.builder()
                 .type(RoutineType.MEDICATION)
                 .title("수정된 루틴")
                 .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
                 .repeat(true)
                 .repeatDays(Arrays.asList(RepeatDay.TUE, RepeatDay.THU))
-                .alertBeforeStartMin(20)
-                .alertBeforeEndMin(15)
-                .repeatIntervalMin(60)
+                .isEnabled(true)
+                .notificationType(NotificationType.EVERY_HOUR)
+                .soundType(SoundType.VOICE_MESSAGE)
+                .voiceMessageUrl("http://new-voice.mp3")
                 .build();
 
         // when
@@ -236,14 +243,13 @@ class RoutineServiceTest {
         Routine updatedRoutine = routineCaptor.getValue();
 
         assertThat(updatedRoutine.getTitle()).isEqualTo("수정된 루틴");
-        assertThat(updatedRoutine.getAlarmSetting()).isNotNull();
-        assertThat(updatedRoutine.getAlarmSetting().getAlertBeforeStartMin()).isEqualTo(20);
-        assertThat(updatedRoutine.getAlarmSetting().getAlertBeforeEndMin()).isEqualTo(15);
-        assertThat(updatedRoutine.getAlarmSetting().getRepeatIntervalMin()).isEqualTo(60);
+        assertThat(updatedRoutine.isEnabled()).isTrue();
+        assertThat(updatedRoutine.getNotificationType()).isEqualTo(NotificationType.EVERY_HOUR);
+        assertThat(updatedRoutine.getSoundType()).isEqualTo(SoundType.VOICE_MESSAGE);
+        assertThat(updatedRoutine.getVoiceMessageUrl()).isEqualTo("http://new-voice.mp3");
         assertThat(updatedRoutine.getRepeatDays()).containsExactlyInAnyOrder(RepeatDay.TUE, RepeatDay.THU);
         assertThat(updatedRoutine.getGuardianMemo()).isEqualTo("기존 보호자 메모"); // 메모는 변경되지 않아야 함
         assertThat(updatedRoutine.getDependentMemo()).isEqualTo("기존 피보호자 메모"); // 메모는 변경되지 않아야 함
-        verify(routineAlarmSettingRepository, times(1)).save(any(RoutineAlarmSetting.class));
     }
 
     @Test
@@ -258,21 +264,25 @@ class RoutineServiceTest {
                 .type(RoutineType.MEDICATION)
                 .title("기존 루틴")
                 .startTime(LocalDateTime.now().minusHours(1))
-                .is_repeat(false)
+                .repeat(false)
+                .isEnabled(false)
+                .notificationType(NotificationType.NONE)
                 .guardianMemo("기존 보호자 메모")
                 .dependentMemo("기존 피보호자 메모")
                 .build();
 
         when(routineRepository.findById(existingRoutine.getId())).thenReturn(Optional.of(existingRoutine));
         when(routineRepository.save(any(Routine.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(routineAlarmSettingRepository.save(any(RoutineAlarmSetting.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         RoutineRequest request = RoutineRequest.builder()
                 .type(RoutineType.MEDICATION)
                 .title("수정된 루틴")
                 .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
                 .repeat(false)
-                .alertBeforeStartMin(10)
+                .isEnabled(true)
+                .notificationType(NotificationType.ON_START_TIME)
+                .soundType(SoundType.DEFAULT_SOUND)
                 .build();
 
         // when
@@ -283,11 +293,11 @@ class RoutineServiceTest {
         verify(routineRepository, times(1)).save(routineCaptor.capture());
         Routine updatedRoutine = routineCaptor.getValue();
 
-        assertThat(updatedRoutine.getAlarmSetting()).isNotNull();
-        assertThat(updatedRoutine.getAlarmSetting().getAlertBeforeStartMin()).isEqualTo(10);
+        assertThat(updatedRoutine.isEnabled()).isTrue();
+        assertThat(updatedRoutine.getNotificationType()).isEqualTo(NotificationType.ON_START_TIME);
+        assertThat(updatedRoutine.getSoundType()).isEqualTo(SoundType.DEFAULT_SOUND);
         assertThat(updatedRoutine.getGuardianMemo()).isEqualTo("기존 보호자 메모"); // 메모는 변경되지 않아야 함
         assertThat(updatedRoutine.getDependentMemo()).isEqualTo("기존 피보호자 메모"); // 메모는 변경되지 않아야 함
-        verify(routineAlarmSettingRepository, times(1)).save(any(RoutineAlarmSetting.class));
     }
 
     @Test
@@ -302,16 +312,13 @@ class RoutineServiceTest {
                 .type(RoutineType.MEDICATION)
                 .title("기존 루틴")
                 .startTime(LocalDateTime.now().minusHours(1))
-                .is_repeat(false)
+                .repeat(false)
+                .isEnabled(true)
+                .notificationType(NotificationType.ON_START_TIME)
+                .soundType(SoundType.DEFAULT_SOUND)
                 .guardianMemo("기존 보호자 메모")
                 .dependentMemo("기존 피보호자 메모")
                 .build();
-        RoutineAlarmSetting existingAlarmSetting = RoutineAlarmSetting.builder()
-                .id(100L)
-                .routine(existingRoutine)
-                .alertBeforeStartMin(10)
-                .build();
-        existingRoutine.setAlarmSetting(existingAlarmSetting);
 
         when(routineRepository.findById(existingRoutine.getId())).thenReturn(Optional.of(existingRoutine));
         when(routineRepository.save(any(Routine.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -320,7 +327,10 @@ class RoutineServiceTest {
                 .type(RoutineType.MEDICATION)
                 .title("수정된 루틴")
                 .startTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().plusHours(1))
                 .repeat(false)
+                .isEnabled(false)
+                .notificationType(NotificationType.NONE)
                 .build();
 
         // when
@@ -331,10 +341,8 @@ class RoutineServiceTest {
         verify(routineRepository, times(1)).save(routineCaptor.capture());
         Routine updatedRoutine = routineCaptor.getValue();
 
-        assertThat(updatedRoutine.getAlarmSetting()).isNull();
-        assertThat(updatedRoutine.getGuardianMemo()).isEqualTo("기존 보호자 메모"); // 메모는 변경되지 않아야 함
-        assertThat(updatedRoutine.getDependentMemo()).isEqualTo("기존 피보호자 메모"); // 메모는 변경되지 않아야 함
-        verify(routineAlarmSettingRepository, times(1)).delete(existingAlarmSetting);
+        assertThat(updatedRoutine.isEnabled()).isFalse();
+        assertThat(updatedRoutine.getNotificationType()).isEqualTo(NotificationType.NONE);
     }
 
 
@@ -417,7 +425,7 @@ class RoutineServiceTest {
         // when & then
         assertThatThrownBy(() -> routineService.getRoutineById(routine.getId()))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessage("해당 루틴에 접근할 권한이 없습니다.");
+                .hasMessage("해당 루틴에 접근할 권한이 없습니다. 활성화된 연결이 필요합니다.");
     }
 
     // --- 루틴 삭제 테스트 ---
@@ -458,7 +466,13 @@ class RoutineServiceTest {
     void completeRoutine_Success() {
         // given
         mockCurrentUser(dependent);
-        Routine routine = Routine.builder().id(1L).guardian(guardian).dependent(dependent).completed(false).build();
+        Routine routine = Routine.builder()
+                .id(1L)
+                .guardian(guardian)
+                .dependent(dependent)
+                .startTime(LocalDateTime.now().minusHours(1))
+                .completedAt(null)
+                .build();
         when(routineRepository.findById(routine.getId())).thenReturn(Optional.of(routine));
 
         // when
@@ -468,7 +482,7 @@ class RoutineServiceTest {
         ArgumentCaptor<Routine> routineCaptor = ArgumentCaptor.forClass(Routine.class);
         verify(routineRepository, times(1)).save(routineCaptor.capture());
         Routine savedRoutine = routineCaptor.getValue();
-        assertThat(savedRoutine.isCompleted()).isTrue();
+        assertThat(savedRoutine.getCompletedAt()).isNotNull();
     }
 
     @Test
@@ -606,6 +620,6 @@ class RoutineServiceTest {
         // when & then
         assertThatThrownBy(() -> routineService.updateRoutineMemo(existingRoutine.getId(), request))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessage("해당 루틴에 접근할 권한이 없습니다.");
+                .hasMessage("해당 루틴에 접근할 권한이 없습니다. 활성화된 연결이 필요합니다.");
     }
 }

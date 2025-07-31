@@ -25,7 +25,7 @@ public class SecurityUtil {
             return Long.parseLong(authentication.getName());
         } catch (NumberFormatException e) {
             log.error("Security Context의 사용자 ID를 파싱할 수 없습니다: {}", authentication.getName());
-            throw new RuntimeException("인증 정보가 올바르지 않습니다.");
+            throw new RuntimeException("인증 정보가 올바르지 않습니다.", e);
         }
     }
 }

@@ -167,7 +167,7 @@ class AuthIntegrationTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 아이디로 로그인을 요청하면 실패(403 Forbidden)해야 한다.")
+    @DisplayName("존재하지 않는 아이디로 로그인을 요청하면 실패(401 Unauthorized)해야 한다.")
     void login_Fail_UserNotFound() throws Exception {
         LoginRequest request = LoginRequest.builder()
                 .username("nonexistent")
@@ -177,11 +177,11 @@ class AuthIntegrationTest {
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("잘못된 비밀번호로 로그인을 요청하면 실패(403 Forbidden)해야 한다.")
+    @DisplayName("잘못된 비밀번호로 로그인을 요청하면 실패(401 Unauthorized)해야 한다.")
     void login_Fail_BadCredentials() throws Exception {
         // 회원가입 먼저
         mockMvc.perform(post("/auth/signup")
@@ -197,7 +197,7 @@ class AuthIntegrationTest {
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     // --- 로그아웃 테스트 ---

@@ -4,14 +4,14 @@ import { Theme } from '../../styles/theme';
 
 const CustomButton = ({
   title = '전체 할 일 보기',
-  size = 'small', // "small" | "large"
+  size = 'small', // "small" | "large" | "xsmall" | "medium"
   variant = 'filled', // "filled" | "outlined"
   isActive = true, // true | false
   onPress,
 }) => {
   const buttonStyle = [
     styles.baseButton,
-    size === 'large' ? styles.largeButton : styles.smallButton,
+    size === 'large' ? styles.largeButton : size === 'xsmall' ? styles.xsmallButton : size === 'medium' ? styles.mediumButton : styles.smallButton,
     variant === 'filled'
       ? isActive
         ? styles.filledButton
@@ -32,8 +32,9 @@ const CustomButton = ({
       : styles.outlinedTextDisabled,
   ];
 
+
   return (
-    <TouchableOpacity style={buttonStyle} onPress={isActive ? onPress : null} disabled={!isActive}>
+    <TouchableOpacity style={buttonStyle} onPress={onPress} disabled={!isActive}>
       <Text style={textStyle}>{title}</Text>
     </TouchableOpacity>
   );
@@ -47,9 +48,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  xsmallButton: {
+    width: 'auto',
+    paddingVertical: Theme.Padding.p_8,
+  },
   smallButton: {
     // paddingVertical: Theme.Padding.p_8,
     width: '30%',
+  },
+  mediumButton:{
+    paddingVertical: Theme.Padding.p_12,
+    width: '50%',
   },
   largeButton: {
     paddingVertical: Theme.Padding.p_10,
@@ -80,7 +89,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: Theme.FontSize.size_24,
     fontFamily: Theme.FontFamily.nanumB,
-    fontWeight: '700',
     lineHeight: Theme.LineHeight[32],
   },
   // Filled 텍스트 - 활성화
@@ -101,6 +109,7 @@ const styles = StyleSheet.create({
     fontSize: Theme.FontSize.size_20,
     color: Theme.Colors.iconDisable,
   },
+ 
 });
 
 export default CustomButton;

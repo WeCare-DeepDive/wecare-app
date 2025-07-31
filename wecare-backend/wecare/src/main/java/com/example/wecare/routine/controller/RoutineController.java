@@ -59,9 +59,17 @@ public class RoutineController {
     }
 
     @PatchMapping("/{routineId}/complete")
-    public ResponseEntity<Void> completeRoutine(@PathVariable Long routineId) {
+    public ResponseEntity<RoutineResponse> completeRoutine(@PathVariable Long routineId) {
         routineService.completeRoutine(routineId);
-        return ResponseEntity.ok().build();
+        RoutineResponse response = routineService.getRoutineById(routineId); // 완료 후 업데이트된 루틴 정보 반환
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{routineId}/uncomplete")
+    public ResponseEntity<RoutineResponse> uncompleteRoutine(@PathVariable Long routineId) {
+        routineService.uncompleteRoutine(routineId);
+        RoutineResponse response = routineService.getRoutineById(routineId); // 완료 해제 후 업데이트된 루틴 정보 반환
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{routineId}/memo")

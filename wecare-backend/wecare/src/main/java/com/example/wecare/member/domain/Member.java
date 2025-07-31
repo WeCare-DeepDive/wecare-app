@@ -56,11 +56,13 @@ public class Member {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "guardian", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "guardian", cascade = CascadeType.ALL)
     @Builder.Default
+    @org.hibernate.annotations.SQLRestriction("is_active = true")
     private Set<Invitation> dependentConnections = new HashSet<>();
 
-    @OneToMany(mappedBy = "dependent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "dependent", cascade = CascadeType.ALL)
     @Builder.Default
+    @org.hibernate.annotations.SQLRestriction("is_active = true")
     private Set<Invitation> guardianConnections = new HashSet<>();
 }
