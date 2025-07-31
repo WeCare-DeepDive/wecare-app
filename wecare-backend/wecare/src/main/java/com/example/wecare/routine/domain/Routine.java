@@ -39,9 +39,6 @@ public class Routine {
     @Column(nullable = false)
     private String title;
 
-    @Column(length = 1000)
-    private String description;
-
     @Column(nullable = false)
     private LocalDateTime startTime;
 
@@ -58,8 +55,19 @@ public class Routine {
     @Column(name = "day", nullable = false)
     private List<RepeatDay> repeatDays;
 
-    @OneToOne(mappedBy = "routine", cascade = CascadeType.ALL, orphanRemoval = true)
-    private RoutineAlarmSetting alarmSetting;
+    @Column(name = "is_enabled", nullable = false)
+    private boolean isEnabled;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "notification_type")
+    private NotificationType notificationType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sound_type")
+    private SoundType soundType;
+
+    @Column(name = "voice_message_url", length = 500)
+    private String voiceMessageUrl;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -78,8 +86,8 @@ public class Routine {
         this.updatedAt = LocalDateTime.now();
     }
 
-    @Column(nullable = false)
-    private boolean completed;
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     @Column(name = "guardian_memo", columnDefinition = "TEXT")
     private String guardianMemo; // 보호자 메모
