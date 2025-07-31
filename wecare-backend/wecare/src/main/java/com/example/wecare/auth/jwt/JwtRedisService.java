@@ -7,8 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-
 @Service
 @RequiredArgsConstructor
 public class JwtRedisService {
@@ -37,8 +35,6 @@ public class JwtRedisService {
     }
 
     public void saveRefreshToken(String refreshToken) {
-        long remain = jwtUtil.getExpirationFromToken(refreshToken).getTime() - System.currentTimeMillis();
-
         if (isTokenLogout(refreshToken)) {
             throw new ApiException(AuthResponseCode.INVALID_TOKEN);
         }
@@ -51,7 +47,7 @@ public class JwtRedisService {
     }
 
     public void deleteRefreshToken(String refreshToken) {
-        redisService.deleteValues(refreshToken);
+        redisService.deleteValues(REFRESH_PREFIX + refreshToken);
     }
 
     public void withdrawToken(String token) {
@@ -59,7 +55,7 @@ public class JwtRedisService {
             throw new ApiException(AuthResponseCode.INVALID_TOKEN);
         }
 
-        redisService.setValues (
+        redisService.setValues(
                 WITHDRAWN_PREFIX + jwtUtil.getIdFromToken(token),
                 "true",
                 accessExp

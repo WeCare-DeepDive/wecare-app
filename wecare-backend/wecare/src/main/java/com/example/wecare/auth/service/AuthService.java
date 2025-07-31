@@ -97,6 +97,8 @@ public class AuthService {
                 .refreshToken(jwtUtil.generateRefreshToken(authentication))
                 .build();
 
+        jwtRedisService.saveRefreshToken(loginResponse.getRefreshToken());
+
         //기존 Token 만료
         jwtRedisService.deleteRefreshToken(refreshToken);
         jwtRedisService.logoutToken(refreshToken);
