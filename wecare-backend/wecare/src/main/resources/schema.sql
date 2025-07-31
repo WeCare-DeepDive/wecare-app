@@ -6,7 +6,7 @@
 
 -- 1. 사용자 테이블
 CREATE TABLE IF NOT EXISTS members (
-    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT  AUTO_INCREMENT PRIMARY KEY,
     username   VARCHAR(50) NOT NULL UNIQUE,
     birth_date TIMESTAMP NOT NULL,
     gender     ENUM('FEMALE', 'MALE') NOT NULL,
@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS members (
 -- 2. 보호자-피보호자 연결 테이블
 CREATE TABLE IF NOT EXISTS connections (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    dependent_id      BIGINT NOT NULL,
-    guardian_id       BIGINT NOT NULL,
-    is_active         TINYINT(1) NOT NULL DEFAULT 1,
+    dependent_id BIGINT NOT NULL,
+    guardian_id BIGINT NOT NULL,
+    is_active TINYINT NOT NULL DEFAULT 1,
     relationship_type ENUM('PARENT', 'GRANDPARENT', 'SIBLING', 'FRIEND', 'RELATIVE', 'OTHER') NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -33,16 +33,16 @@ CREATE TABLE IF NOT EXISTS connections (
 
 -- 3. 루틴 테이블
 CREATE TABLE IF NOT EXISTS routines (
-    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     connection_id BIGINT NOT NULL,
-    start_time        TIMESTAMP NOT NULL,
-    end_time          TIMESTAMP,
-    completed_at      TIMESTAMP,
-    is_repeat         TINYINT(1) NOT NULL,
-    title             VARCHAR(255) NOT NULL,
-    routine_type              ENUM('ACTIVITY', 'CUSTOM', 'MEDICATION', 'SUPPLEMENT', 'MEAL') NOT NULL,
-    guardian_memo     TEXT,
-    dependent_memo    TEXT,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP,
+    completed_at TIMESTAMP,
+    is_repeat TINYINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    routine_type ENUM('ACTIVITY', 'CUSTOM', 'MEDICATION', 'SUPPLEMENT', 'MEAL') NOT NULL,
+    guardian_memo TEXT,
+    dependent_memo TEXT,
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -53,17 +53,17 @@ CREATE TABLE IF NOT EXISTS routines (
 CREATE TABLE IF NOT EXISTS routine_repeat_days (
     id BIGINT PRIMARY KEY,
     routine_id BIGINT NOT NULL,
-    repeat_day        ENUM('DAILY','MON','TUE','WED','THU','FRI','SAT','SUN') NOT NULL,
-    UNIQUE(routine_id, day),
+    repeat_day ENUM('DAILY','MON','TUE','WED','THU','FRI','SAT','SUN') NOT NULL,
+    UNIQUE (routine_id, repeat_day),
     FOREIGN KEY (routine_id) REFERENCES routines (id) ON DELETE CASCADE
 );
 
 -- 5. 알림 관련 테이블
 CREATE TABLE IF NOT EXISTS routine_alerts (
     routine_id BIGINT PRIMARY KEY,
-    is_active            TINYINT(1) NOT NULL DEFAULT 1,
-    notification_type     ENUM('NONE', 'ON_START_TIME', 'ON_END_TIME', 'EVERY_10_MINUTES', 'EVERY_30_MINUTES', 'EVERY_HOUR') NOT NULL,
-    sound_type            ENUM('DEFAULT_SOUND', 'SILENT', 'VIBRATION', 'VOICE_MESSAGE') NOT NULL,
-    voice_message_url     VARCHAR(500),
+    is_active TINYINT NOT NULL DEFAULT 1,
+    notification_type ENUM('NONE', 'ON_START_TIME', 'ON_END_TIME', 'EVERY_10_MINUTES', 'EVERY_30_MINUTES', 'EVERY_HOUR') NOT NULL,
+    sound_type ENUM('DEFAULT_SOUND', 'SILENT', 'VIBRATION', 'VOICE_MESSAGE') NOT NULL,
+    voice_message_url VARCHAR(500),
     FOREIGN KEY (routine_id) REFERENCES routines (id) ON DELETE CASCADE
 );
