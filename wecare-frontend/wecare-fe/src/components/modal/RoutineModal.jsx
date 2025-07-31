@@ -133,7 +133,8 @@ const styles = StyleSheet.create({
         height: 197
   },
   text1: {
-        color: Theme.Colors.colorMediumslateblue100
+        color: Theme.Colors.colorMediumslateblue100,
+        fontWeight: "600",
   },
   text2: {
         color: Theme.Colors.colorBlack
