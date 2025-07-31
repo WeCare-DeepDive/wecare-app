@@ -9,7 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
-  const { login, isLoading, error } = useAuthStore();
+  const { login, isLoading, error, accessToken } = useAuthStore();
   
   const {
     control,
@@ -32,7 +32,7 @@ export default function LoginScreen() {
     try {
       console.log('Login Data:', data);
       await login(data);
-      console.log('Login successful!');
+      console.log('Login successful!', accessToken);
       // 로그인 성공 시 자동으로 메인 화면으로 이동 (App.js에서 처리)
     } catch (error) {
       console.error('Login failed:', error);
