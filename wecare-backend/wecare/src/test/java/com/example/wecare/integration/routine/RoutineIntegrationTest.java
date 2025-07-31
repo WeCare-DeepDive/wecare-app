@@ -2,9 +2,6 @@ package com.example.wecare.integration.routine;
 
 import com.example.wecare.auth.dto.LoginRequest;
 import com.example.wecare.auth.dto.SignUpRequest;
-import com.example.wecare.invitation.domain.Invitation;
-import com.example.wecare.invitation.domain.InvitationId;
-import com.example.wecare.invitation.domain.RelationshipType;
 import com.example.wecare.invitation.repository.InvitationRepository;
 import com.example.wecare.member.domain.Gender;
 import com.example.wecare.member.domain.Member;
@@ -27,12 +24,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+
 public class RoutineIntegrationTest {
 
     @Autowired
@@ -82,8 +79,14 @@ public class RoutineIntegrationTest {
     public void setup() throws Exception {
         // 테스트 전에 기존 데이터를 정리
         routineRepository.deleteAll();
+        entityManager.flush();
+        entityManager.clear();
         invitationRepository.deleteAll();
+        entityManager.flush();
+        entityManager.clear();
         memberRepository.deleteAll();
+        entityManager.flush();
+        entityManager.clear();
 
         // 1. 보호자 회원 가입
         SignUpRequest guardianSignUpRequest = SignUpRequest.builder()
@@ -187,9 +190,9 @@ public class RoutineIntegrationTest {
         RoutineRequest routineRequest = RoutineRequest.builder()
                 .type(RoutineType.valueOf("ACTIVITY"))
                 .title("산책하기")
-                .description("매일 아침 30분 산책")
-                .startTime(LocalDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0))
-                .endTime(LocalDateTime.now().plusDays(1).withHour(8).withMinute(30).withSecond(0).withNano(0))
+                .dependentMemo("매일 아침 30분 산책")
+                .startTime(LocalDateTime.now().withHour(8).withMinute(0))
+                .endTime(LocalDateTime.now().withHour(8).withMinute(30))
                 .repeat(true)
                 .repeatDays(asList(RepeatDay.MON, RepeatDay.TUE, RepeatDay.WED, RepeatDay.THU, RepeatDay.FRI))
                 .build();
@@ -222,9 +225,9 @@ public class RoutineIntegrationTest {
         RoutineRequest routineRequest = RoutineRequest.builder()
                 .type(RoutineType.valueOf("ACTIVITY"))
                 .title("산책하기")
-                .description("매일 아침 30분 산책")
-                .startTime(LocalDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0))
-                .endTime(LocalDateTime.now().plusDays(1).withHour(8).withMinute(30).withSecond(0).withNano(0))
+                .dependentMemo("매일 아침 30분 산책")
+                .startTime(LocalDateTime.now().withHour(8).withMinute(0))
+                .endTime(LocalDateTime.now().withHour(8).withMinute(30))
                 .repeat(true)
                 .repeatDays(asList(RepeatDay.MON, RepeatDay.TUE, RepeatDay.WED, RepeatDay.THU, RepeatDay.FRI))
                 .build();
@@ -279,9 +282,9 @@ public class RoutineIntegrationTest {
         RoutineRequest routineRequest = RoutineRequest.builder()
                 .type(RoutineType.valueOf("ACTIVITY"))
                 .title("산책하기")
-                .description("매일 아침 30분 산책")
-                .startTime(LocalDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0))
-                .endTime(LocalDateTime.now().plusDays(1).withHour(8).withMinute(30).withSecond(0).withNano(0))
+                .dependentMemo("매일 아침 30분 산책")
+                .startTime(LocalDateTime.now().withHour(8).withMinute(0))
+                .endTime(LocalDateTime.now().withHour(8).withMinute(30))
                 .repeat(true)
                 .repeatDays(asList(RepeatDay.MON, RepeatDay.TUE, RepeatDay.WED, RepeatDay.THU, RepeatDay.FRI))
                 .build();
@@ -299,9 +302,9 @@ public class RoutineIntegrationTest {
         RoutineRequest routineRequest = RoutineRequest.builder()
                 .type(RoutineType.valueOf("ACTIVITY"))
                 .title("산책하기")
-                .description("매일 아침 30분 산책")
-                .startTime(LocalDateTime.now().withHour(8).withMinute(0).withSecond(0).withNano(0))
-                .endTime(LocalDateTime.now().plusDays(1).withHour(8).withMinute(30).withSecond(0).withNano(0))
+                .dependentMemo("매일 아침 30분 산책")
+                .startTime(LocalDateTime.now().withHour(8).withMinute(0))
+                .endTime(LocalDateTime.now().plusHours(1).withHour(8).withMinute(0))
                 .repeat(true)
                 .repeatDays(asList(RepeatDay.MON, RepeatDay.TUE, RepeatDay.WED, RepeatDay.THU, RepeatDay.FRI))
                 .build();
