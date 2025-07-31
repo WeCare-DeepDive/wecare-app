@@ -2,52 +2,39 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Theme } from '../../styles/theme';
-import CustomButton from '../../components/buttons/Button';
+import { Theme } from '../../../styles/theme';
+import CustomButton from '../../../components/buttons/Button';
 import { useNavigation } from '@react-navigation/native';
-import {useAuthStore} from '../../store/authStore';
-import NonInviteFamilyScreen from './components/NonInviteFamilyScreen';
 
-export default function RoutineScreen() {
+export default function NonInviteFamilyScreen() {
   const navigation = useNavigation();
-  const { user } = useAuthStore();
 
-  // 연결된 가족 정보가 없는 경우 => 초대 화면으로 이동
-  if(!user.guardians || !user.dependents) {
-    return <NonInviteFamilyScreen />
-  }
-
-  // 연결된 가족 정보가 있는 경우 => 메인 화면으로 이동
   return (
     <SafeAreaView style={styles.safeareaview}>
       <View style={styles.view}>
         <View style={styles.invitetext}>
-          <Text>루틴 화면</Text>
-          {/* TODO: 모달 추가
-                  : 화면에 모달이 잘 뜨는지 확인
-                  : 네임카드 추가
-                  : 할 일이 없는 경우 화면 
-                  : 할 일이 잇는경우 할 일 보이게(시간순나열)
-                  : 할 일 추가 버튼
-                  : 할 일 추가하는 페이지 => 매우 중요!!!
-                  : 전체 할 일 보기 => 전체 할일이 나열 => 이건 후순위
-          */}
+          <View style={styles.iconguardianWrapper}>
+            <Image
+              style={styles.iconguardian}
+              resizeMode='cover'
+              source={require('@assets/images/InviteFamily.png')}
+            />
+          </View>
+          <Text style={[styles.text, styles.textTypo2]}>케어를 함께할 가족을 초대해 보세요!</Text>
+          <CustomButton
+            title='초대하기'
+            size='large'
+            variant='filled'
+            isActive={true}
+            onPress={() => {
+              navigation.navigate('InvitationScreen');
+            }}
+          />
         </View>
       </View>
     </SafeAreaView>
   );
 }
-
-const addSuccessMessage = [
-  {
-    isGuardian: true, 
-    name: user?.dependents.name,
-    title: '님과 연결 되었어요!', 
-    description: `추천 할 일을 ${user?.dependents.name} 님의 하루에 추가할까요?`,
-
-  },
-  {isGuardian: false, title: '김바듬', description: '님과 연결 되었어요!'},
-]
 
 const styles = StyleSheet.create({
   safeareaview: {

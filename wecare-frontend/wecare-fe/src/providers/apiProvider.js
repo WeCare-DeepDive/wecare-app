@@ -2,6 +2,9 @@ import axios from 'axios';
 import { API_BASE_URL, API_TIMEOUT, LOG_LEVEL } from '../config/environment';
 import { useAuthStore } from '../store/authStore';
 
+// Zustand store의 getState와 setState를 직접 가져오기
+const authStore = useAuthStore;
+
 class ApiProvider {
   constructor() {
     this.baseURL = API_BASE_URL;
@@ -23,7 +26,7 @@ class ApiProvider {
         if(config.useAuth != null && config.useAuth === true) {
             // access token 사용
             console.log("useAuth가 적용된 요청입니다.")
-            const { accessToken } = useAuthStore.getState();
+            const { accessToken } = authStore.getState();
             console.log('📌 accessToken:', accessToken); // 추가해보기
             if (accessToken) {
                 config.headers.Authorization = `Bearer ${accessToken}`;
@@ -59,7 +62,7 @@ class ApiProvider {
           originalRequest._retry = true;
           
           try {
-            const { refreshToken } = useAuthStore.getState();
+            const { refreshToken } = authStore.getState();
             if (!refreshToken) {
               throw new Error('리프레시 토큰이 없습니다.');
             }
@@ -72,7 +75,7 @@ class ApiProvider {
             const { accessToken, newRefreshToken } = response.data;
             
             // 새 토큰을 authStore에 저장
-            useAuthStore.getState().setTokens(accessToken, newRefreshToken || refreshToken);
+            authStore.getState().setTokens(accessToken, newRefreshToken || refreshToken);
             
             // 원래 요청 재시도
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -83,7 +86,7 @@ class ApiProvider {
             console.error('❌ 토큰 갱신 실패:', refreshError);
             
             // 토큰 삭제 및 강제 로그아웃 실행
-            useAuthStore.getState().forceLogout();
+            authStore.getState().forceLogout();
             
             throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
           }
@@ -172,9 +175,8 @@ class ApiProvider {
     // 인터셉터에서 자동으로 토큰 추가 됨
     console.log('📤 Request Headers:', this.axiosInstance.defaults.headers);
     const response = await this.axiosInstance.get('/api/members/me', {
-        useAuth: true
+      useAuth: true
     });
-    
     console.log('Successfully fetched user info', response.data);
     return response.data;
   }
