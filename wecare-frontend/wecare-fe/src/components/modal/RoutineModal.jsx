@@ -134,11 +134,10 @@ const styles = StyleSheet.create({
   },
   text1: {
         color: Theme.Colors.colorMediumslateblue100,
-        fontWeight: "semibold",
+        fontWeight: "600",
   },
   text2: {
-        color: Theme.Colors.colorBlack,
-        fontWeight: "600",
+        color: Theme.Colors.colorBlack
   },
   text: {
         fontSize: 22,
