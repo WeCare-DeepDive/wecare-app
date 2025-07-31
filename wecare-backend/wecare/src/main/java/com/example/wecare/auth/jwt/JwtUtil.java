@@ -1,5 +1,6 @@
 package com.example.wecare.auth.jwt;
 
+import com.example.wecare.member.domain.Member;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
@@ -21,16 +22,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtUtil {
+    private final JwtRedisService jwtRedisService;
     private final JwtProperties jwtProperties;
 
     // Access 토큰 생성
-    public String generateAccessToken(Authentication authentication) {
-        String authorities = authentication.getAuthorities().stream()
+    public String generateAccessToken(Authentication auth) {
+        Member member = (Member) auth.getPrincipal();
+
+        String authorities = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
         return Jwts.builder()
-                .subject(authentication.getName())
+                .subject(member.getId().toString())
                 .claim("auth", authorities)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessExp()))
@@ -38,15 +42,16 @@ public class JwtUtil {
                 .compact();
     }
 
-
     // Refresh 토큰 생성
-    public String generateRefreshToken(Authentication authentication) {
-        String authorities = authentication.getAuthorities().stream()
+    public String generateRefreshToken(Authentication auth) {
+        Member member = (Member) auth.getPrincipal();
+
+        String authorities = auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
         return Jwts.builder()
-                .subject(authentication.getName())
+                .subject(member.getId().toString())
                 .claim("auth", authorities)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + jwtProperties.getRefreshExp()))
@@ -55,7 +60,7 @@ public class JwtUtil {
     }
 
     // JWT 토큰에서 인증 정보 조회
-    public Authentication getAuthentication(String token) {
+    public Authentication getAuthenticationFromToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(jwtProperties.getSecretKey())
                 .build()
@@ -72,8 +77,13 @@ public class JwtUtil {
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
-    // 토큰의 유효성 + 만료일자 확인
+    // 토큰의 유효성 + 만료일자 확인 + Blacklist 검증
     public boolean validateToken(String token) {
+        if(!jwtRedisService.isTokenLogout(token) || !jwtRedisService.isTokenWithdrawn(token)){
+            Date date = new Date();
+            log.error("Invalid JWT token inspected : {}", date);
+            return false;
+        }
         try {
             Jwts.parser()
                     .verifyWith(jwtProperties.getSecretKey())
@@ -85,6 +95,15 @@ public class JwtUtil {
             log.error("Invalid JWT token inspected : {} {}", e.getMessage(), date);
             return false;
         }
+    }
+
+    public Long getIdFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(jwtProperties.getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return Long.parseLong(claims.getSubject());
     }
 
     // 토큰에서 username 추출
