@@ -1,4 +1,4 @@
-package com.example.wecare.routine.domain;
+package com.example.wecare.routine.code;
 
 public enum NotificationType {
     NONE,               // 알림 없음

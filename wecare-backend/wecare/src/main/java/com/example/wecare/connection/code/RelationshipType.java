@@ -1,4 +1,4 @@
-package com.example.wecare.invitation.domain;
+package com.example.wecare.connection.code;
 
 public enum RelationshipType {
     PARENT, // 부모
