@@ -1,7 +1,7 @@
 package com.example.wecare.auth.dto;
 
-import com.example.wecare.member.domain.Gender;
-import com.example.wecare.member.domain.Role;
+import com.example.wecare.member.code.Gender;
+import com.example.wecare.member.code.Role;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
