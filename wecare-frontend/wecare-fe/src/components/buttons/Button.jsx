@@ -4,14 +4,14 @@ import { Theme } from '../../styles/theme';
 
 const CustomButton = ({
   title = '전체 할 일 보기',
-  size = 'small', // "small" | "large"
+  size = 'small', // "small" | "large" | "xsmall"
   variant = 'filled', // "filled" | "outlined"
   isActive = true, // true | false
   onPress,
 }) => {
   const buttonStyle = [
     styles.baseButton,
-    size === 'large' ? styles.largeButton : styles.smallButton,
+    size === 'large' ? styles.largeButton : size === 'xsmall' ? styles.xsmallButton : styles.smallButton,
     variant === 'filled'
       ? isActive
         ? styles.filledButton
@@ -46,6 +46,10 @@ const styles = StyleSheet.create({
     borderRadius: Theme.BorderRadius['24'] / 2.4, // 10정도
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  xsmallButton: {
+    width: 'auto',
+    paddingVertical: Theme.Padding.p_8,
   },
   smallButton: {
     // paddingVertical: Theme.Padding.p_8,
