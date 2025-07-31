@@ -171,7 +171,6 @@ class ApiProvider {
   // 사용자 정보 조회 API
   async getUserInfo() {
     console.log('Fetching user info from /api/members/me');
-    
     // 인터셉터에서 자동으로 토큰 추가 됨
     console.log('📤 Request Headers:', this.axiosInstance.defaults.headers);
     const response = await this.axiosInstance.get('/api/members/me', {

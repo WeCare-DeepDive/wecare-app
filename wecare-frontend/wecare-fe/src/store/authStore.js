@@ -2,13 +2,48 @@ import { create } from 'zustand';
 import apiProvider from '../providers/apiProvider';
 
 const useAuthStore = create((set, get) => ({
+  // 개발할 때 사용하는 user 정보(추후 삭제)
   user: null,
-  isAuthenticated: false,
+  isAuthenticated: true, // 처음 시작은 무조건 false
   accessToken: null,
   refreshToken: null,
   isLoading: false,
   error: null,
   navigationRef: null, // 네비게이션 참조 저장
+
+  // // test data 추가 호출
+  // setTestUserDependent: async () => {
+  //   set((state) => ({
+  //     user: {
+  //       ...state.user,
+  //       dependents: [{
+  //       "id": 3,
+  //       "username": "child001",
+  //       "name": "이보호",
+  //       "gender": "FEMALE",
+  //       "birthDate": "2010-03-01",
+  //       "role": "DEPENDENT",
+  //       "isActive": false,
+  //       "relationshipType": "etc"
+  //     }]
+  //   }}));
+  //  },
+  // setTestUserGuardian: async () => {
+  //   set((state) => ({
+  //     user: {
+  //       ...state.user,
+  //       guardians: [{
+  //       "id": 1,
+  //       "username": "parent001",
+  //       "name": "이보듬",
+  //       "gender": "MALE",
+  //       "birthDate": "1966-03-01",
+  //       "role": "GUARDIAN",
+  //       "isActive": false,
+  //       "relationshipType": "etc"
+  //     }]
+  //   }}));
+  // },
 
   // 로그인 액션
   login: async (credentials) => {
@@ -24,13 +59,13 @@ const useAuthStore = create((set, get) => ({
         accessToken,
         refreshToken,
       });
-      console.log('✅ 토큰 저장 완료');
       
       // 사용자 정보 가져오기
       let user = null;
       try {
-        // 약간의 딜레이 (임시 디버깅용)
+        // 약간의 딜레이 (임시 디버깅용)        
         await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms 대기
+
         user = await apiProvider.getUserInfo();
       } catch (error) {
         console.warn('Failed to fetch user info:', error);
@@ -41,7 +76,6 @@ const useAuthStore = create((set, get) => ({
           role: 'GUARDIAN', // 기본값
         };
       }
-      
       set({
         user,
         isAuthenticated: true,
@@ -50,7 +84,8 @@ const useAuthStore = create((set, get) => ({
         isLoading: false,
         error: null,
       });
-
+      
+      console.log('토큰이 살아있는지 확인:', accessToken?.substring(0, 20) + '...');
       return { success: true, user };
     } catch (error) {
       console.error('Login error:', error);
