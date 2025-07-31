@@ -4,14 +4,14 @@ import { Theme } from '../../styles/theme';
 
 const CustomButton = ({
   title = '전체 할 일 보기',
-  size = 'small', // "small" | "large" | "xsmall"
+  size = 'small', // "small" | "large" | "xsmall" | "medium"
   variant = 'filled', // "filled" | "outlined"
   isActive = true, // true | false
   onPress,
 }) => {
   const buttonStyle = [
     styles.baseButton,
-    size === 'large' ? styles.largeButton : size === 'xsmall' ? styles.xsmallButton : styles.smallButton,
+    size === 'large' ? styles.largeButton : size === 'xsmall' ? styles.xsmallButton : size === 'medium' ? styles.mediumButton : styles.smallButton,
     variant === 'filled'
       ? isActive
         ? styles.filledButton
@@ -31,6 +31,7 @@ const CustomButton = ({
       ? styles.outlinedText
       : styles.outlinedTextDisabled,
   ];
+
 
   return (
     <TouchableOpacity style={buttonStyle} onPress={onPress} disabled={!isActive}>
@@ -54,6 +55,10 @@ const styles = StyleSheet.create({
   smallButton: {
     // paddingVertical: Theme.Padding.p_8,
     width: '30%',
+  },
+  mediumButton:{
+    paddingVertical: Theme.Padding.p_12,
+    width: '50%',
   },
   largeButton: {
     paddingVertical: Theme.Padding.p_10,
@@ -104,6 +109,7 @@ const styles = StyleSheet.create({
     fontSize: Theme.FontSize.size_20,
     color: Theme.Colors.iconDisable,
   },
+ 
 });
 
 export default CustomButton;

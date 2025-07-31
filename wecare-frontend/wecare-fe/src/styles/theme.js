@@ -41,6 +41,8 @@ export const Colors = {
   colorLightgray: '#d3d3d3',
   colorBlack: '#000000',
   colorWhite: '#ffffff',
+  colorMediumslateblue100: "#7777ff",
+  colorMediumslateblue200: "#685eff",
   // 버튼배경
   iconDisable: '#374957',
 
@@ -124,6 +126,8 @@ export const Padding = {
   padding_20: 20,
   padding_14: 14,
   p_20: 20,  // 추가
+  p_12: 12,
+  p_30: 30,
 };
 
 // 테마
@@ -131,6 +135,7 @@ export const BorderRadius = {
   24: 24,
   br_10: 10,
   br_6: 6,
+  br_20: 20,
 };
 
 export const Theme = {

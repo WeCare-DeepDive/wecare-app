@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FormInput from '../../components/forms/FormInputs';
-import { Controller, useForm } from 'react-hook-form';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { Theme } from '../../styles/theme';
+import { Controller, useForm } from 'react-hook-form';
+import FormInput from '../../components/forms/FormInputs';
 import { Picker } from '@react-native-picker/picker';
-import { useAuthStore } from '../../store/authStore';
 import InputWithButton from '../../components/forms/InputWithButton';
-import useInviteStore from './store/inviteStore';
 import CustomButton from '../../components/buttons/Button';
-import { useNavigation } from '@react-navigation/native';
+import useUserInfo from '../../hooks/useUserInfo';
 import * as Clipboard from 'expo-clipboard';
-import { LOG_LEVEL } from '../../config/environment';
+import { useNavigation } from '@react-navigation/native';
+import useInviteStore from './store/inviteStore';
 
 
 // TODO: 초대코드 불러오기 초대코드 무조건 불러와져야함!!!!
@@ -22,8 +21,20 @@ export default function InvitationScreen() {
   // 초대코드 불러오기
   const { inviteCode, fetchInviteCode, isLoading, fetchInviteAccept, isSuccess, inviteCodeError } = useInviteStore();
   // 사용자 정보 불러오기
-  const {user} = useAuthStore();
-  const isPretender = user.role === 'GUARDIAN';
+  const {user, isDependent, loading, error} = useUserInfo({useMock: true});
+
+  if (loading) {
+    return <Text>Loading...</Text>;
+  }
+  
+  if (error) {
+    useEffect(() => {
+      Alert.alert('Error', error.message);
+      // navigation.navigate('InvitationScreen');
+    }, []);
+    return null;
+  }
+  
 
   // 네비게이션
   const navigation = useNavigation();
@@ -42,9 +53,9 @@ export default function InvitationScreen() {
     mode: 'onChange',
   });
 
- // isPretender에 따른 폰트 크기 결정
-  const fontSize = isPretender ? Theme.FontSize.size_18 : Theme.FontSize.size_24;
-  const lineHeight = isPretender ? Theme.LineHeight[18] : Theme.LineHeight[24];
+ // isDependent에 따른 폰트 크기 결정
+  const fontSize = isDependent ? Theme.FontSize.size_24 : Theme.FontSize.size_18;
+  const lineHeight = isDependent ? Theme.LineHeight[24] : Theme.LineHeight[18];
 
   // 화면 로딩 시 초대코드 불러오기
   // useEffect(() => {
@@ -73,18 +84,21 @@ export default function InvitationScreen() {
     // }
     // await fetchInviteAccept(requestData);
     
-    if(isSuccess) {
-      // 하루 메인으로 다시 이동 => 만약 성공을 했을 시, 성공 했다는 모달을 띄워야함
-      navigation.navigate('RoutineMain');
-    } else {
-      if(LOG_LEVEL === 'debug') {
-        console.log('🔍 초대 코드 수락 실패');
-        console.log('🔍 초대 코드 수락 실패 이유:', inviteCodeError);
-      }
-      // 실패에 관한 alert 띄우기
-      Alert.alert('초대 코드 수락 실패', inviteCodeError?.message);
-    }
-  } 
+    // if(isSuccess) {
+    //   // 하루 메인으로 다시 이동 => 만약 성공을 했을 시, 성공 했다는 모달을 띄워야함
+    //   navigation.navigate('RoutineMain', {showModal: true});
+    // } else {
+    //   if(LOG_LEVEL === 'debug') {
+    //     console.log('🔍 초대 코드 수락 실패');
+    //     console.log('🔍 초대 코드 수락 실패 이유:', inviteCodeError);
+    //   }
+    //   // 실패에 관한 alert 띄우기
+    //   Alert.alert('초대 코드 수락 실패', inviteCodeError?.message);
+    // }
+
+    
+    return navigation.navigate('RoutineMain', {showModal: true});
+  }
 
   return (
     <SafeAreaView style={styles.safeareaview}>

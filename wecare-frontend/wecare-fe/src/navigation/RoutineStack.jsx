@@ -4,6 +4,7 @@ import RoutineScreen from '../screen/Routine/RoutineScreen';
 import InvitationScreen from '../screen/Routine/InvitationScreen';
 import HeaderRoutine from '../components/common/HeaderRoutine';
 import Header from '../components/common/Header';
+import DailyRoutineScreen from '../screen/Routine/DailyRoutineScreen';
 
 const Stack = createStackNavigator();
 
@@ -34,6 +35,19 @@ export default function RoutineStack() {
               saveButton={false}
               backButton={true}
               titleColored={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name='ScheduleScreen'
+        component={DailyRoutineScreen}
+        options={{
+          header: () => (
+            <Header
+              title='위케어'
+              onBellPress={() => console.log('Bell pressed')}
+              onNotificationPress={() => console.log('Noti pressed')}
             />
           ),
         }}
