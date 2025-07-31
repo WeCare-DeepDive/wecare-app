@@ -42,17 +42,17 @@ const Calendar = () => {
 
 const styles = StyleSheet.create({
   calendar: {
-    backgroundColor: '#fff',
+    backgroundColor: '#eff0ff',
     paddingHorizontal: 20,
     paddingVertical: 20,
     marginHorizontal: 0,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: 'rgba(137, 137, 137, 0.11)',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 1,
     shadowRadius: 10,
-    elevation: 10,
+    elevation: 3,
   },
   calendarHeader: {
     flexDirection: 'row',
