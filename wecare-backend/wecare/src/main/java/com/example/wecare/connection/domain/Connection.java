@@ -29,7 +29,7 @@ public class Connection {
     private Member dependent;
 
     @Column(name = "is_active", insertable = false)
-    private boolean isActive;
+    private boolean active;
 
     @Column(name = "relationship_type") // 관계 필드 추가
     @Enumerated(EnumType.STRING) // Enum 값을 문자열로 저장

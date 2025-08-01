@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     boolean existsByGuardianIdAndDependentIdAndActiveTrue(Long guardianId, Long dependentId);
+    boolean existsByGuardianAndDependentAndActiveTrue(Member guardian, Member dependent);
 
     Optional<Connection> findByGuardianAndDependent(Member guardian, Member dependent);
 
