@@ -1,305 +1,362 @@
 package com.example.wecare.routine.service;
 
-import com.example.wecare.invitation.domain.Invitation;
+import com.example.wecare.common.code.AuthResponseCode;
+import com.example.wecare.common.code.GeneralResponseCode;
+import com.example.wecare.common.exception.ApiException;
+import com.example.wecare.member.code.Role;
 import com.example.wecare.member.domain.Member;
-import com.example.wecare.member.domain.Role;
 import com.example.wecare.member.repository.MemberRepository;
-import com.example.wecare.routine.domain.NotificationType;
-import com.example.wecare.routine.domain.RepeatDay;
+import com.example.wecare.routine.code.HistoryStatus;
+import com.example.wecare.routine.code.RepeatDay;
 import com.example.wecare.routine.domain.Routine;
-import com.example.wecare.routine.dto.RoutineRequest;
-import com.example.wecare.routine.dto.RoutineResponse;
-import com.example.wecare.routine.dto.RoutineMemoRequest;
+import com.example.wecare.routine.domain.RoutineAlert;
+import com.example.wecare.routine.domain.RoutineHistory;
+import com.example.wecare.routine.domain.RoutineRepeatDay;
+import com.example.wecare.routine.dto.*;
+import com.example.wecare.routine.repository.RoutineAlertRepository;
+import com.example.wecare.routine.repository.RoutineHistoryRepository;
+import com.example.wecare.routine.repository.RoutineRepeatDayRepository;
 import com.example.wecare.routine.repository.RoutineRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class RoutineService {
-
     private final RoutineRepository routineRepository;
+    private final RoutineRepeatDayRepository routineRepeatDayRepository;
+    private final RoutineAlertRepository routineAlertRepository;
+    private final RoutineHistoryRepository routineHistoryRepository;
     private final MemberRepository memberRepository;
 
-    private Long getCurrentMemberId() {
-        return Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
-    }
+    @Transactional(readOnly = true)
+    @PreAuthorize("@dependentAccessHandler.ownershipCheck(#dependentId)")
+    public List<RoutineDto> getRoutinesByDependentId(Long dependentId) {
+        Member dependent = memberRepository.findById(dependentId)
+                .orElseThrow(() -> new ApiException(AuthResponseCode.MEMBER_NOT_FOUND));
 
-    private Member getCurrentMember() {
-        Long currentMemberId = getCurrentMemberId();
-        return memberRepository.findById(currentMemberId)
-                .orElseThrow(() -> new IllegalArgumentException("현재 로그인된 사용자를 찾을 수 없습니다."));
+        if (dependent.getRole() != Role.DEPENDENT) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "피보호자의 루틴에만 접근할 수 있습니다.");
+        }
+
+        // 루틴과 루틴 알람 조합하여 DTO 변환하여 반환
+        List<Routine> routines = routineRepository.findAllByDependent(dependent);
+        List<RoutineDto> routineDtos = new ArrayList<>();
+        for (Routine routine : routines) {
+            RoutineAlert alert = routineAlertRepository.findByRoutine((routine))
+                    .orElseThrow(() -> new ApiException(GeneralResponseCode.INTERNAL_SERVER_ERROR, "알람 정보를 찾을 수 없습니다."));
+            routineDtos.add(RoutineDto.fromEntity(
+                    routine,
+                    RoutineAlertDto.fromEntity(alert)
+            ));
+        }
+
+        return routineDtos;
     }
 
     @Transactional
-    public RoutineResponse createRoutine(Long dependentId, RoutineRequest request) {
-        if (request.isRepeat() && (request.getRepeatDays() == null || request.getRepeatDays().isEmpty())) {
-            throw new IllegalArgumentException("반복 루틴은 반복 요일이 지정되어야 합니다.");
-        }
-        if (request.getEndTime().isBefore(request.getStartTime())) {
-            throw new IllegalArgumentException("종료 시간은 시작 시간보다 이전일 수 없습니다.");
-        }
-        Member guardian = getCurrentMember();
-
-        if (guardian.getRole() != Role.GUARDIAN) {
-            throw new AccessDeniedException("루틴을 생성할 수 있는 권한이 없습니다. 보호자만 루틴을 생성할 수 있습니다.");
-        }
-
+    @PreAuthorize("@dependentAccessHandler.ownershipCheck(#dependentId)")
+    public RoutineDto createRoutine(Long dependentId, RoutineRequest request) {
         Member dependent = memberRepository.findById(dependentId)
-                .orElseThrow(() -> new IllegalArgumentException("피보호자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.DEPENDENT_NOT_FOUND));
 
         if (dependent.getRole() != Role.DEPENDENT) {
-            throw new IllegalArgumentException("루틴 대상은 피보호자여야 합니다.");
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 등록 대상은 피보호자여야 합니다.");
         }
 
-        boolean isConnected = guardian.getDependentConnections().stream()
-                .anyMatch(conn -> conn.getDependent().getId().equals(dependentId) && conn.isActive());
-
-        if (!isConnected) {
-            throw new AccessDeniedException("해당 피보호자에 대한 루틴을 생성할 권한이 없습니다. 활성화된 연결이 필요합니다.");
+        Member currentMember = getCurrentMember();
+        if (currentMember.getRole() != Role.GUARDIAN) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 등록은 보호자만 가능합니다.");
         }
+
+        validateRoutineRequest(request);
 
         Routine routine = Routine.builder()
-                .guardian(guardian)
                 .dependent(dependent)
-                .type(request.getType())
-                .title(request.getTitle())
-                .guardianMemo(request.getGuardianMemo())
                 .startTime(request.getStartTime())
                 .endTime(request.getEndTime())
-                .repeat(request.isRepeat())
-                .repeatDays(request.getRepeatDays())
-                .isEnabled(request.getIsEnabled() != null ? request.getIsEnabled() : false)
-                .notificationType(request.getNotificationType())
-                .soundType(request.getSoundType())
-                .voiceMessageUrl(request.getVoiceMessageUrl())
-                .completedAt(null)
-                .guardianMemo(request.getGuardianMemo()) // 보호자 메모 추가
-                .dependentMemo(request.getDependentMemo()) // 피보호자 메모 추가
+                .title(request.getTitle())
+                .routineType(request.getRoutineType())
+                .guardianMemo(request.getGuardianMemo())
+                .dependentMemo(request.getDependentMemo())
                 .build();
 
         Routine savedRoutine = routineRepository.save(routine);
 
-        return convertToResponse(savedRoutine);
-    }
+        RoutineAlert routineAlert = RoutineAlert.builder()
+                .routine(savedRoutine)
+                .isActive(request.getIsAlertActive())
+                .notificationType(request.getNotificationType())
+                .soundType(request.getSoundType())
+                .build();
 
-    public List<RoutineResponse> getRoutinesByGuardian() {
-        Member currentMember = getCurrentMember();
-        if (currentMember.getRole() != Role.GUARDIAN) {
-            throw new AccessDeniedException("루틴을 생성할 수 있는 권한이 없습니다. 보호자만 루틴을 생성할 수 있습니다.");
-        }
-        List<Routine> routines = routineRepository.findByGuardianId(currentMember.getId());
-        return routines.stream()
-                .filter(routine -> currentMember.getDependentConnections().stream()
-                        .anyMatch(conn -> conn.getDependent().getId().equals(routine.getDependent().getId()) && conn.isActive())) // isActive() 검증 추가
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
-    }
+        RoutineAlert savedRoutineAlert = routineAlertRepository.save(routineAlert);
 
-    public List<RoutineResponse> getRoutinesByDependent() {
-        Member currentMember = getCurrentMember();
-        if (currentMember.getRole() != Role.DEPENDENT) {
-            throw new AccessDeniedException("피보호자만 루틴 목록을 조회할 수 있습니다.");
-        }
-        List<Routine> routines = routineRepository.findByDependentId(currentMember.getId());
-        return routines.stream()
-                .filter(routine -> currentMember.getGuardianConnections().stream()
-                        .anyMatch(conn -> conn.getGuardian().getId().equals(routine.getGuardian().getId()) && conn.isActive())) // isActive() 검증 추가
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
-    }
-
-    public RoutineResponse getRoutineById(Long routineId) {
-        Routine routine = findRoutineByIdAndCheckAccess(routineId);
-        return convertToResponse(routine);
+        return RoutineDto.fromEntity(
+                savedRoutine,
+                RoutineAlertDto.fromEntity(savedRoutineAlert)
+        );
     }
 
     @Transactional
-    public RoutineResponse updateRoutine(Long routineId, RoutineRequest request) {
-        if (request.isRepeat() && (request.getRepeatDays() == null || request.getRepeatDays().isEmpty())) {
-            throw new IllegalArgumentException("반복 루틴은 반복 요일이 지정되어야 합니다.");
-        }
-        if (request.getEndTime().isBefore(request.getStartTime())) {
-            throw new IllegalArgumentException("종료 시간은 시작 시간보다 이전일 수 없습니다.");
-        }
-        Routine routine = findRoutineByIdAndCheckAccess(routineId);
+    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
+    public RoutineDto updateRoutine(Long routineId, RoutineRequest request) {
+        Routine routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
+
+        RoutineAlert alert = routineAlertRepository.findByRoutine(routine)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.INTERNAL_SERVER_ERROR, "알람 정보를 찾을 수 없습니다."));
+
         Member currentMember = getCurrentMember();
-
-        if (currentMember.getRole() != Role.GUARDIAN || !routine.getGuardian().getId().equals(currentMember.getId())) {
-            throw new AccessDeniedException("루틴을 수정할 권한이 없습니다. 보호자만 루틴을 수정할 수 있습니다.");
+        if (currentMember.getRole() != Role.GUARDIAN) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 수정은 보호자만 가능합니다.");
         }
 
-        routine.setType(request.getType());
+        validateRoutineRequest(request);
+
+        // 루틴 정보 업데이트
+        routine.setStartTime(request.getStartTime());
+        if (request.getEndTime() != null) {
+            routine.setEndTime(request.getEndTime());
+        }
+
         routine.setTitle(request.getTitle());
+        routine.setRoutineType(request.getRoutineType());
         if (request.getGuardianMemo() != null) {
             routine.setGuardianMemo(request.getGuardianMemo());
         }
         if (request.getDependentMemo() != null) {
             routine.setDependentMemo(request.getDependentMemo());
         }
-        routine.setStartTime(request.getStartTime());
-        routine.setEndTime(request.getEndTime());
-        routine.setRepeat(request.isRepeat());
-        if (request.getRepeatDays() != null && request.getRepeatDays().contains(RepeatDay.DAILY)) {
-            routine.setRepeatDays(java.util.EnumSet.allOf(RepeatDay.class).stream()
-                    .filter(day -> day != RepeatDay.DAILY) // DAILY는 실제 요일이 아니므로 제외
-                    .collect(Collectors.toList()));
-        } else if (request.getRepeatDays() != null) {
-            routine.setRepeatDays(request.getRepeatDays());
+
+        routine = routineRepository.save(routine);
+
+        // 알람 관련 정보 업데이트
+        if (request.getIsAlertActive() != null) {
+            alert.setIsActive(request.getIsAlertActive());
         }
+        alert.setNotificationType(request.getNotificationType());
+        alert.setSoundType(request.getSoundType());
 
-        routine.setRepeatDays(request.getRepeatDays());
-
-        routine.setEnabled(request.getIsEnabled() != null ? request.getIsEnabled() : false);
-        routine.setNotificationType(request.getNotificationType());
-        routine.setSoundType(request.getSoundType());
-        routine.setVoiceMessageUrl(request.getVoiceMessageUrl());
+        alert = routineAlertRepository.save(alert);
 
         Routine updatedRoutine = routineRepository.save(routine);
-        return convertToResponse(updatedRoutine);
+
+        return RoutineDto.fromEntity(updatedRoutine, RoutineAlertDto.fromEntity(alert));
     }
 
+    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
     @Transactional
     public void deleteRoutine(Long routineId) {
-        Routine routine = findRoutineByIdAndCheckAccess(routineId);
-        Member currentMember = getCurrentMember();
+        Routine routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
 
-        if (!routine.getGuardian().getId().equals(currentMember.getId())) {
-            throw new AccessDeniedException("루틴을 삭제할 권한이 없습니다.");
+        Member currentMember = getCurrentMember();
+        if (currentMember.getRole() != Role.GUARDIAN) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 수정은 보호자만 가능합니다.");
         }
+
         routineRepository.delete(routine);
     }
 
-    @Transactional
-    public void completeRoutine(Long routineId) {
-        Routine routine = findRoutineByIdAndCheckAccess(routineId);
-        Member currentMember = getCurrentMember();
+    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
+    @Transactional(readOnly = true)
+    public List<RoutineRepeatDayDto> getRepeatDaysByRoutineId(Long routineId) {
+        Routine routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
 
-        if (currentMember.getRole() != Role.DEPENDENT) {
-            throw new AccessDeniedException("루틴을 완료할 수 있는 권한이 없습니다. 피보호자만 가능합니다.");
-        }
+        List<RoutineRepeatDay> repeatDays = routineRepeatDayRepository.findAllByRoutine(routine);
 
-        if (!routine.getDependent().getId().equals(currentMember.getId())) {
-            throw new AccessDeniedException("해당 루틴을 완료할 권한이 없습니다.");
-        }
-
-        // 루틴 시작 시간 이전에는 완료 처리할 수 없도록 막기
-        LocalDateTime now = LocalDateTime.now();
-        if (routine.getStartTime() == null) {
-            throw new IllegalArgumentException("루틴 시작 시간이 설정되지 않아 완료 처리할 수 없습니다.");
-        }
-        if (now.isBefore(routine.getStartTime())) {
-            throw new IllegalArgumentException("루틴 시작 시간 이전에는 완료 처리할 수 없습니다.");
-        }
-        // 루틴 시간이 지났는지 확인 (종료 시간이 설정된 경우에만)
-        if (routine.getEndTime() != null && now.isAfter(routine.getEndTime())) {
-            throw new IllegalArgumentException("루틴 시간이 지나 완료 처리할 수 없습니다.");
-        }
-
-        routine.setCompletedAt(now); // completed 필드 대신 completedAt 필드를 현재 시간으로 설정
-        routineRepository.save(routine);
+        return repeatDays.stream().map(RoutineRepeatDayDto::fromEntity).toList();
     }
 
+    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
     @Transactional
-    public void uncompleteRoutine(Long routineId) {
-        Routine routine = findRoutineByIdAndCheckAccess(routineId);
-        Member currentMember = getCurrentMember();
+    public List<RoutineRepeatDayDto> updateRepeatDays(
+            Long routineId, List<RepeatDay> repeatDayRequests
+    ) {
+        Routine routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
 
-        if (currentMember.getRole() != Role.DEPENDENT) {
-            throw new AccessDeniedException("루틴 완료를 해제할 수 있는 권한이 없습니다. 피보호자만 가능합니다.");
+        if (repeatDayRequests == null || repeatDayRequests.isEmpty()) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "반복 형태가 비어있습니다.");
         }
 
-        if (!routine.getDependent().getId().equals(currentMember.getId())) {
-            throw new AccessDeniedException("해당 루틴의 완료를 해제할 권한이 없습니다.");
+        if (repeatDayRequests.size() != new HashSet<>(repeatDayRequests).size()) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "반복 형태 목록에 중복되는 값이 있습니다.");
         }
 
-        // 루틴 시간이 지났는지 확인
-        LocalDateTime now = LocalDateTime.now();
-        if (routine.getEndTime() != null && now.isAfter(routine.getEndTime())) {
-            throw new IllegalArgumentException("루틴 시간이 지나 완료 해제할 수 없습니다.");
-        }
+        routineRepeatDayRepository.deleteAllByRoutine(routine);
 
-        routine.setCompletedAt(null); // completedAt 필드를 null로 설정하여 완료 해제
-        routineRepository.save(routine);
+        List<RoutineRepeatDay> savedRepeatDays = new ArrayList<>();
+        for (RepeatDay repeatDay : repeatDayRequests) {
+            savedRepeatDays.add(RoutineRepeatDay.builder()
+                    .repeatDay(repeatDay)
+                    .routine(routine)
+                    .build());
+        }
+        savedRepeatDays = routineRepeatDayRepository.saveAll(savedRepeatDays);
+
+        return savedRepeatDays.stream().map(RoutineRepeatDayDto::fromEntity).toList();
     }
 
+    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
     @Transactional
-    public RoutineResponse updateRoutineMemo(Long routineId, RoutineMemoRequest request) {
-        Routine routine = findRoutineByIdAndCheckAccess(routineId);
+    public RoutineDto updateRoutineMemo(Long routineId, String content) {
+        Routine routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
+
         Member currentMember = getCurrentMember();
 
         if (currentMember.getRole() == Role.GUARDIAN) {
-            if (!routine.getGuardian().getId().equals(currentMember.getId())) {
-                throw new AccessDeniedException("해당 루틴의 보호자 메모를 수정할 권한이 없습니다.");
-            }
-            if (request.getDependentMemo() != null) {
-                throw new AccessDeniedException("보호자는 피보호자 메모를 수정할 수 없습니다.");
-            }
-            routine.setGuardianMemo(request.getGuardianMemo());
+            routine.setGuardianMemo(content);
         } else if (currentMember.getRole() == Role.DEPENDENT) {
-            if (!routine.getDependent().getId().equals(currentMember.getId())) {
-                throw new AccessDeniedException("해당 루틴의 피보호자 메모를 수정할 권한이 없습니다.");
-            }
-            if (request.getGuardianMemo() != null) {
-                throw new AccessDeniedException("피보호자는 보호자 메모를 수정할 수 없습니다.");
-            }
-            routine.setDependentMemo(request.getDependentMemo());
-        } else {
-            throw new AccessDeniedException("메모를 수정할 권한이 없습니다.");
+            routine.setDependentMemo(content);
         }
 
-        Routine updatedRoutine = routineRepository.save(routine);
-        return convertToResponse(updatedRoutine);
+        routine = routineRepository.save(routine);
+
+        RoutineAlert alert = routineAlertRepository.findByRoutine(routine)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
+
+        return RoutineDto.fromEntity(routine, RoutineAlertDto.fromEntity(alert));
     }
 
-    private Routine findRoutineByIdAndCheckAccess(Long routineId) {
-        Routine routine = routineRepository.findById(routineId)
-                .orElseThrow(() -> new IllegalArgumentException("루틴을 찾을 수 없습니다."));
+    @PreAuthorize("@partnerAccessHandler.ownershipCheck(#memberId)")
+    @Transactional(readOnly = true)
+    public List<RoutineHistoryDto> getHistoriesByMemberId(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ApiException(AuthResponseCode.MEMBER_NOT_FOUND));
+
         Member currentMember = getCurrentMember();
 
-        boolean isGuardian = currentMember.getRole() == Role.GUARDIAN &&
-                currentMember.getDependentConnections().stream()
-                        .anyMatch(conn -> conn.getDependent().getId().equals(routine.getDependent().getId()) && conn.isActive());
-
-        boolean isDependent = currentMember.getRole() == Role.DEPENDENT &&
-                currentMember.getGuardianConnections().stream()
-                        .anyMatch(conn -> conn.getGuardian().getId().equals(routine.getGuardian().getId()) && conn.isActive());
-
-        if (!isGuardian && !isDependent) {
-            throw new AccessDeniedException("해당 루틴에 접근할 권한이 없습니다. 활성화된 연결이 필요합니다.");
+        if (currentMember.getRole() != Role.DEPENDENT) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "피보호자의 루틴에만 접근할 수 있습니다.");
         }
-        return routine;
+
+        List<RoutineHistory> histories = routineHistoryRepository.findByRoutine_Dependent(member);
+
+        return histories.stream().map(RoutineHistoryDto::fromEntity).toList();
     }
 
-    private RoutineResponse convertToResponse(Routine routine) {
-        return RoutineResponse.builder()
-                .id(routine.getId())
-                .guardianId(routine.getGuardian().getId())
-                .dependentId(routine.getDependent().getId())
-                .type(routine.getType())
-                .title(routine.getTitle())
-                .guardianMemo(routine.getGuardianMemo())
-                .startTime(routine.getStartTime())
-                .endTime(routine.getEndTime())
-                .repeat(routine.isRepeat())
-                .repeatDays(routine.getRepeatDays())
-                .isEnabled(routine.isEnabled())
-                .notificationType(routine.getNotificationType())
-                .soundType(routine.getSoundType())
-                .voiceMessageUrl(routine.getVoiceMessageUrl())
-                .completedAt(routine.getCompletedAt())
-                .guardianMemo(routine.getGuardianMemo()) // 보호자 메모 추가
-                .dependentMemo(routine.getDependentMemo()) // 피보호자 메모 추가
-                .guardianName(routine.getGuardian().getName()) // 보호자 이름 추가
-                .dependentName(routine.getDependent().getName()) // 피보호자 이름 추가
+    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
+    @Transactional(readOnly = true)
+    public List<RoutineHistoryDto> getHistoriesByRoutineId(Long routineId) {
+        Routine routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
+
+        List<RoutineHistory> histories = routineHistoryRepository.findByRoutine(routine);
+
+        return histories.stream().map(RoutineHistoryDto::fromEntity).toList();
+    }
+
+    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
+    @Transactional
+    public RoutineHistoryDto completeRoutine(Long routineId) {
+        Routine routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Member currentMember = (Member) auth.getPrincipal();
+
+        if (currentMember.getRole() != Role.DEPENDENT) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "피보호자만 루틴의 수행 여부를 조작할 수 있습니다.");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 루틴 완료 가능한지 검증
+        validateRoutineCompleting(routine);
+
+        RoutineHistory todayHistory = RoutineHistory.builder()
+                .routine(routine)
+                .completedDate(LocalDate.now())
+                .completedTime(LocalTime.now())
+                .status(HistoryStatus.COMPLETED)
                 .build();
+
+        // 루틴 시간이 지났는지 확인 (종료 시간이 설정된 경우에만)
+        if (routine.getEndTime() != null && now.toLocalTime().isAfter(routine.getEndTime())) {
+            //루틴 시간이 지났을 경우 실패로 처리
+            todayHistory.setStatus(HistoryStatus.FAILED);
+        }
+
+        todayHistory = routineHistoryRepository.save(todayHistory);
+
+        // 로그에 해당 루틴 완료 기록 저장 및 반환
+        return RoutineHistoryDto.fromEntity(todayHistory);
+    }
+
+    @Transactional
+    public void undoCompleteRoutine(Long historyId) {
+        LocalDateTime now = LocalDateTime.now();
+        RoutineHistory history = routineHistoryRepository.findById(historyId)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.HISTORY_NOT_FOUND));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Member currentMember = (Member) auth.getPrincipal();
+
+        if (currentMember.getRole() != Role.DEPENDENT) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "피보호자만 루틴의 수행 여부를 조작할 수 있습니다.");
+        }
+
+        Routine routine = history.getRoutine();
+
+        // 오늘이 루틴에 해당하는 요일인지 확인
+        List<RoutineRepeatDay> repeatDays = routineRepeatDayRepository.findAllByRoutine(routine);
+        if (repeatDays.stream()
+                .map(r -> r.getRepeatDay().getDayOfWeek())
+                .noneMatch(day -> day == now.getDayOfWeek())
+                || now.toLocalTime().isBefore(routine.getStartTime())
+                || routine.getEndTime() != null && now.toLocalTime().isAfter(routine.getEndTime())
+        ) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "현재 루틴 수행 기록을 수정할 수 없습니다.");
+        }
+
+        routineHistoryRepository.delete(history);
+    }
+
+    private void validateRoutineRequest(RoutineRequest request) {
+        if (request.getEndTime().isBefore(request.getStartTime())) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "종료 시간은 시작 시간보다 이전일 수 없습니다.");
+        }
+    }
+
+    private void validateRoutineCompleting(Routine routine) {
+        LocalDateTime now = LocalDateTime.now();
+        // 오늘 해당 루틴이 완료되었는지 확인
+        routineHistoryRepository.findByRoutineAndCompletedDate(routine, now.toLocalDate())
+                .ifPresent((h) -> {
+                    throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "이미 오늘 완료된 루틴입니다.");
+                });
+
+        // 오늘이 루틴에 해당하는 요일인지 확인
+        List<RoutineRepeatDay> repeatDays = routineRepeatDayRepository.findAllByRoutine(routine);
+        if (repeatDays.stream()
+                .map(r -> r.getRepeatDay().getDayOfWeek())
+                .noneMatch(day -> day == now.getDayOfWeek())) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "현재 시간은 반복 요일에 해당하는 요일이 아닙니다.");
+        }
+
+        // 루틴 시작 시간 이전에는 완료 처리할 수 없도록 막기
+        if (now.toLocalTime().isBefore(routine.getStartTime())) {
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 시작 시간 이전에는 완료 처리할 수 없습니다.");
+        }
+    }
+
+    private Member getCurrentMember() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (Member) auth.getPrincipal();
     }
 }

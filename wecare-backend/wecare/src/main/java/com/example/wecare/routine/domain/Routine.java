@@ -1,97 +1,49 @@
 package com.example.wecare.routine.domain;
 
 import com.example.wecare.member.domain.Member;
+import com.example.wecare.routine.code.RoutineType;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.sql.Timestamp;
+import java.time.LocalTime;
 
-@Entity
-@Table(name = "routine", uniqueConstraints = @UniqueConstraint(name = "pk_routine", columnNames = {"id"}))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Entity
+@Table(name = "routines")
 public class Routine {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guardian_id", nullable = false, foreignKey = @ForeignKey(name = "fk_routine_guardian_id"))
-    private Member guardian;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "dependent_id", nullable = false, foreignKey = @ForeignKey(name = "fk_routine_dependent_id"))
+    @ManyToOne
+    @JoinColumn(name = "dependent_id")
     private Member dependent;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private RoutineType type;
+    @Column(name = "start_time")
+    private LocalTime startTime;
+    @Column(name = "end_time")
+    private LocalTime endTime;
 
-    @Column(nullable = false)
+    @Column(name = "title")
     private String title;
 
-    @Column(nullable = false)
-    private LocalDateTime startTime;
-
-    private LocalDateTime endTime;
-
-    @Column(name = "is_repeat", nullable = false)
-    private boolean repeat;
-
-    @ElementCollection(targetClass = RepeatDay.class)
     @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "routine_repeat_days",
-            joinColumns = @JoinColumn(name = "routine_id", foreignKey = @ForeignKey(name = "fk_routine_repeat_days_routine_id")),
-            uniqueConstraints = @UniqueConstraint(name = "pk_routine_repeat_days", columnNames = {"routine_id", "day"}))
-    @Column(name = "day", nullable = false)
-    private List<RepeatDay> repeatDays;
+    @Column(name = "routine_type")
+    private RoutineType routineType;
 
-    @Column(name = "is_enabled", nullable = false)
-    private boolean isEnabled;
+    @Column(name = "guardian_memo")
+    private String guardianMemo;
+    @Column(name = "dependent_memo")
+    private String dependentMemo;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "notification_type")
-    private NotificationType notificationType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "sound_type")
-    private SoundType soundType;
-
-    @Column(name = "voice_message_url", length = 500)
-    private String voiceMessageUrl;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    public void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
-    }
-
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @Column(name = "completed_at")
-    private LocalDateTime completedAt;
-
-    @Column(name = "guardian_memo", columnDefinition = "TEXT")
-    private String guardianMemo; // 보호자 메모
-
-    @Column(name = "dependent_memo", columnDefinition = "TEXT")
-    private String dependentMemo; // 피보호자 메모
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private Timestamp createdAt;
+    @Column(name = "updated_at", insertable = false)
+    private Timestamp updatedAt;
 }

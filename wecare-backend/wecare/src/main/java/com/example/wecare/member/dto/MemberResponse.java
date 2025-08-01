@@ -1,14 +1,13 @@
 package com.example.wecare.member.dto;
 
-import com.example.wecare.member.domain.Gender;
-import com.example.wecare.member.domain.Role;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.example.wecare.member.code.Gender;
+import com.example.wecare.member.code.Role;
+import com.example.wecare.member.domain.Member;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
-import java.util.List;
+import java.sql.Timestamp;
 
 @Getter
 @Setter
@@ -18,10 +17,21 @@ public class MemberResponse {
     private String username;
     private String name;
     private Gender gender;
-    private LocalDate birthDate;
+    private Timestamp birthDate;
     private Role role;
-    private List<MemberResponse> guardians; // 피보호자의 경우 연결된 보호자 목록 (MemberResponse로 통일)
-    private List<MemberResponse> dependents; // 보호자의 경우 연결된 피보호자 목록
-    @JsonProperty("isActive") // JSON 직렬화/역직렬화 시 필드명 지정
-    private boolean isActive; // 연결 상태 추가
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+
+    public static MemberResponse fromEntity(Member member) {
+        return MemberResponse.builder()
+                .id(member.getId())
+                .username(member.getUsername())
+                .name(member.getName())
+                .gender(member.getGender())
+                .birthDate(member.getBirthDate())
+                .role(member.getRole())
+                .createdAt(member.getCreatedAt())
+                .updatedAt(member.getUpdatedAt())
+                .build();
+    }
 }

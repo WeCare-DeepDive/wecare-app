@@ -1,129 +1,120 @@
 package com.example.wecare.auth.service;
 
 import com.example.wecare.auth.dto.LoginRequest;
+import com.example.wecare.auth.dto.LoginResponse;
 import com.example.wecare.auth.dto.SignUpRequest;
-import com.example.wecare.auth.dto.TokenDto;
-import com.example.wecare.auth.jwt.JwtProperties;
+import com.example.wecare.auth.jwt.JwtRedisService;
 import com.example.wecare.auth.jwt.JwtUtil;
+import com.example.wecare.common.code.AuthResponseCode;
+import com.example.wecare.common.code.GeneralResponseCode;
+import com.example.wecare.common.exception.ApiException;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.repository.MemberRepository;
-import com.example.wecare.common.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.concurrent.TimeUnit;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
-
+    private final AuthenticationManager authenticationManager;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtUtil jwtUtil;
-    private final RedisService redisService;
-    private final JwtProperties jwtProperties;
+    private final JwtRedisService jwtRedisService;
 
     @Transactional
-    public void signUp(SignUpRequest request) {
-        if (memberRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new IllegalArgumentException("이미 등록된 아이디입니다.");
+    public String signUp(SignUpRequest request) {
+        if (memberRepository.existsMemberByUsername(request.getUsername())) {
+            throw new ApiException(GeneralResponseCode.DUPLICATED_USERNAME);
         }
 
-        Member member = new Member();
-        member.setPassword(passwordEncoder.encode(request.getPassword()));
-        member.setName(request.getName());
-        member.setGender(request.getGender());
-        member.setBirthDate(request.getBirthDate());
-        member.setUsername(request.getUsername());
-        member.setRole(request.getRole());
-
-        memberRepository.save(member);
-    }
-
-    @Transactional
-    public TokenDto login(LoginRequest loginRequest) {
-        log.info("uesrname으로 로그인 시도 중입니다: {}", loginRequest.getUsername());
-        // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
-        // 이때 authentication 는 인증 여부를 확인하는 authenticated 값이 false
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
-
-        // 2. 실제 검증 (사용자 비밀번호 체크)이 이루어지는 부분
-        // authenticate 매서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드가 실행
-        Authentication authentication = null;
-        try {
-            authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-            log.info("username의 인증이 성공했습니다: {}", loginRequest.getUsername());
-        } catch (Exception e) {
-            log.error("username의 인증에 실패했습니다: {}. Error: {}", loginRequest.getUsername(), e.getMessage());
-            throw e; // 예외를 다시 던져서 컨트롤러에서 처리하도록 함
+        if (request.getBirthDate().isAfter(LocalDate.now())){
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "생년월일은 현재보다 미래일 수 없습니다.");
         }
 
-        // 3. 인증 정보를 기반으로 JWT 토큰 생성
-        TokenDto tokenDto = TokenDto.builder()
-                .accessToken(jwtUtil.generateAccessToken(authentication))
-                .refreshToken(jwtUtil.generateRefreshToken(authentication))
+        Member member = Member.builder()
+                .username(request.getUsername())
+                .name(request.getName())
+                .role(request.getRole())
+                .gender(request.getGender())
+                .birthDate(Timestamp.valueOf(request.getBirthDate().atStartOfDay()))
+                .password(passwordEncoder.encode(request.getPassword()))
                 .build();
 
-        // 4. RefreshToken Redis 저장 (expirationTime 설정을 통해 자동 삭제 처리)
-        redisService.setValues(authentication.getName(), tokenDto.getRefreshToken(), jwtProperties.getRefreshExp(), TimeUnit.MILLISECONDS);
+        member = memberRepository.save(member);
 
-        return tokenDto;
+        return member.getName();
+    }
+
+    @Transactional(readOnly = true)
+    public LoginResponse login(LoginRequest loginRequest) {
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+        );
+
+        Member member = (Member) auth.getPrincipal();
+
+        String refreshToken = jwtUtil.generateRefreshToken(auth);
+        jwtRedisService.saveRefreshToken(refreshToken);
+
+        return LoginResponse.builder()
+                .memberId(member.getId())
+                .accessToken(jwtUtil.generateAccessToken(auth))
+                .refreshToken(refreshToken)
+                .build();
     }
 
     @Transactional
-    public void logout(String accessToken) {
-        // 1. Access Token 검증
-        if (!jwtUtil.validateToken(accessToken)) {
-            throw new IllegalArgumentException("유효하지 않은 Access Token 입니다.");
-        }
-
-        // 2. Access Token 에서 Authentication 추출
-        Authentication authentication = jwtUtil.getAuthentication(accessToken);
-
-        // 3. Redis 에서 해당 User ID 로 저장된 Refresh Token 이 있는지 여부 확인 후 있을 경우 삭제
-        if (redisService.getValues(authentication.getName()) != null) {
-            redisService.deleteValues(authentication.getName());
-        }
-
-        // 4. 해당 Access Token 유효시간 가지고 와서 BlackList 로 저장
-        long expiration = jwtUtil.getExpirationFromToken(accessToken).getTime() - System.currentTimeMillis();
-        redisService.setValues(accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
-    }
-
-    @Transactional
-    public TokenDto reissue(String refreshToken) {
-        // 1. Refresh Token 검증
+    public void logout(Long memberId, String accessToken, String refreshToken) {
         if (!jwtUtil.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 Refresh Token 입니다.");
+            log.error("Invalid JWT token inspected : {} in Logging out {}", refreshToken, LocalDateTime.now());
+            throw new ApiException(AuthResponseCode.INVALID_TOKEN);
         }
 
-        // 2. Refresh Token 에서 Authentication 추출
-        Authentication authentication = jwtUtil.getAuthentication(refreshToken);
+        memberRepository.findById(memberId)
+                .orElseThrow(() -> new ApiException(AuthResponseCode.MEMBER_NOT_FOUND));
 
-        // 3. Redis 에서 User ID 기반으로 저장된 Refresh Token 값 조회
-        String redisRefreshToken = redisService.getValues(authentication.getName());
-        if (redisRefreshToken == null || !redisRefreshToken.equals(refreshToken)) {
-            throw new IllegalArgumentException("Refresh Token 정보가 일치하지 않습니다.");
+        jwtRedisService.deleteRefreshToken(refreshToken);
+        jwtRedisService.logoutToken(accessToken); //Redis 블랙리스트에 토큰 추가
+        jwtRedisService.logoutToken(refreshToken);
+
+        SecurityContextHolder.clearContext(); //인증 정보 초기화
+    }
+
+    @Transactional(readOnly = true)
+    public LoginResponse reissue(String accessToken, String refreshToken) {
+        if (!jwtUtil.validateToken(refreshToken) || !jwtRedisService.hasRefreshToken(refreshToken)) {
+            throw new ApiException(AuthResponseCode.INVALID_TOKEN);
         }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         // 4. 새로운 토큰 생성
-        TokenDto tokenDto = TokenDto.builder()
-                .accessToken(jwtUtil.generateAccessToken(authentication))
-                .refreshToken(jwtUtil.generateRefreshToken(authentication))
+        LoginResponse loginResponse = LoginResponse.builder()
+                .accessToken(jwtUtil.generateAccessToken(auth))
+                .refreshToken(jwtUtil.generateRefreshToken(auth))
                 .build();
 
-        // 5. RefreshToken Redis 업데이트
-        redisService.setValues(authentication.getName(), tokenDto.getRefreshToken(), jwtProperties.getRefreshExp(), TimeUnit.MILLISECONDS);
+        jwtRedisService.saveRefreshToken(loginResponse.getRefreshToken());
 
-        return tokenDto;
+        //기존 Token 만료
+        jwtRedisService.deleteRefreshToken(refreshToken);
+        jwtRedisService.logoutToken(refreshToken);
+        jwtRedisService.logoutToken(accessToken);
+
+        return loginResponse;
     }
 }
 
