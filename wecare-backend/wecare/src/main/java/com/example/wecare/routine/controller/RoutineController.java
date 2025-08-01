@@ -8,6 +8,7 @@ import com.example.wecare.routine.dto.RoutineRequest;
 import com.example.wecare.routine.service.RoutineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/routines")
 @RequiredArgsConstructor
+@Tag(name = "루틴 서비스", description = "루틴 조회, 수정, 조작 등")
 public class RoutineController {
     private final RoutineService routineService;
 
