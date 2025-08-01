@@ -13,7 +13,7 @@ import java.sql.Timestamp;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "relationships")
+@Table(name = "connections")
 public class Connection {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
