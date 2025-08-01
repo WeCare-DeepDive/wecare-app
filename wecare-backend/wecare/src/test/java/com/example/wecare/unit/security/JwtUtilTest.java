@@ -3,7 +3,8 @@ package com.example.wecare.unit.security;
 
 import com.example.wecare.auth.jwt.JwtProperties;
 import com.example.wecare.auth.jwt.JwtUtil;
-import com.example.wecare.member.domain.Role;
+import com.example.wecare.member.code.Role;
+import com.example.wecare.member.domain.Member;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,14 +35,21 @@ class JwtUtilTest {
     @InjectMocks
     private JwtUtil jwtUtil;
 
-    private Authentication authentication;
+    Member testMember = Member.builder()
+            .id(3L)
+            .name("test")
+            .role(Role.GUARDIAN)
+            .username("testtest1234")
+            .build();
+
+    Authentication authentication;
 
     @BeforeEach
     void setUp() {
         authentication = new UsernamePasswordAuthenticationToken(
-                "testUser",
-                null,
-                Collections.singleton(new SimpleGrantedAuthority(Role.GUARDIAN.name()))
+                testMember,
+                "testPass",
+                Collections.singleton(new SimpleGrantedAuthority(testMember.getRole().name()))
         );
     }
 
@@ -64,12 +72,11 @@ class JwtUtilTest {
         assertNotNull(accessToken);
         assertNotNull(refreshToken);
 
-        assertEquals(authentication.getName(), jwtUtil.getUsernameFromToken(accessToken));
-        assertTrue(authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("GUARDIAN")));
+        assertEquals(testMember.getId(), jwtUtil.getIdFromToken(accessToken));
+        assertEquals(testMember.getId(), jwtUtil.getIdFromToken(refreshToken));
 
-        Authentication authFromRefreshToken = jwtUtil.getAuthentication(refreshToken);
-        assertThat(authFromRefreshToken.getName()).isEqualTo("testUser");
+        Long memberId = jwtUtil.getIdFromToken(refreshToken);
+        assertThat(memberId).isEqualTo(testMember.getId());
     }
 
     @Test
@@ -118,44 +125,6 @@ class JwtUtilTest {
 
         // then
         assertFalse(isValid);
-    }
-
-    @Test
-    @DisplayName("토큰에서 인증 정보를 정상적으로 추출해야 한다.")
-    void getAuthentication_Success() {
-        // given
-        given(jwtProperties.getAccessExp())
-                .willReturn(36000L);
-        given(jwtProperties.getSecretKey())
-                .willReturn(Keys.hmacShaKeyFor("qwerqwerqwerqwerqwerqwerqwerqwer".getBytes(StandardCharsets.UTF_8)));
-
-        // given
-        String token = jwtUtil.generateAccessToken(authentication);
-
-        // when
-        Authentication resultAuth = jwtUtil.getAuthentication(token);
-
-        // then
-        assertThat(resultAuth.getName()).isEqualTo("testUser");
-        assertThat(resultAuth.getAuthorities().stream().map(GrantedAuthority::getAuthority)).containsExactly(Role.GUARDIAN.name());
-    }
-
-    @Test
-    @DisplayName("토큰에서 사용자 ID를 정상적으로 추출해야 한다.")
-    void getUserIdFromToken_Success() {
-        // given
-        given(jwtProperties.getAccessExp())
-                .willReturn(36000L);
-        given(jwtProperties.getSecretKey())
-                .willReturn(Keys.hmacShaKeyFor("qwerqwerqwerqwerqwerqwerqwerqwer".getBytes(StandardCharsets.UTF_8)));
-
-        String token = jwtUtil.generateAccessToken(authentication);
-
-        // when
-        String username = jwtUtil.getUsernameFromToken(token);
-
-        // then
-        assertThat(username).isEqualTo("testUser");
     }
 
     @Test

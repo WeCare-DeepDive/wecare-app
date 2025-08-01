@@ -1,6 +1,6 @@
 package com.example.wecare.invitation.dto;
 
-import com.example.wecare.invitation.domain.RelationshipType;
+import com.example.wecare.connection.code.RelationshipType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

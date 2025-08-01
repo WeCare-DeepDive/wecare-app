@@ -1,19 +1,16 @@
 package com.example.wecare.member.domain;
 
-import com.example.wecare.invitation.domain.Invitation;
+import com.example.wecare.member.code.Gender;
+import com.example.wecare.member.code.Role;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import java.sql.Timestamp;
+import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
@@ -21,48 +18,66 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "members", uniqueConstraints = @UniqueConstraint(name = "uk_members_username", columnNames = {"username"}))
-public class Member {
-
+@Table(name = "members")
+public class Member implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "username")
     private String username;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "password")
     private String password;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "name")
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "gender")
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    @Column(nullable = false)
-    private LocalDate birthDate;
+    @Column(name = "birth_date")
+    private Timestamp birthDate;
 
-    @Column(nullable = false)
+    @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private Timestamp createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "updated_at", insertable = false)
+    private Timestamp updatedAt;
 
-    @OneToMany(mappedBy = "guardian", cascade = CascadeType.ALL)
-    @Builder.Default
-    @org.hibernate.annotations.SQLRestriction("is_active = true")
-    private Set<Invitation> dependentConnections = new HashSet<>();
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
 
-    @OneToMany(mappedBy = "dependent", cascade = CascadeType.ALL)
-    @Builder.Default
-    @org.hibernate.annotations.SQLRestriction("is_active = true")
-    private Set<Invitation> guardianConnections = new HashSet<>();
+    @Override
+    public String getUsername() {
+        return username; // 이메일을 아이디로 사용
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

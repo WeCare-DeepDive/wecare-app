@@ -1,15 +1,17 @@
 package com.example.wecare.common.config;
 
+import com.example.wecare.auth.exception.AuthAccessDeniedHandler;
+import com.example.wecare.auth.exception.AuthAuthenticationEntryPoint;
 import com.example.wecare.auth.jwt.JwtAuthenticationFilter;
-import com.example.wecare.auth.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,8 +20,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
-import jakarta.servlet.http.HttpServletResponse; // HttpServletResponse import 추가
 
 import java.util.List;
 
@@ -27,34 +27,26 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
-    private final JwtUtil jwtUtil;
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager() throws Exception {
-        return authenticationManagerBuilder.getObject();
-    }
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthAuthenticationEntryPoint authAuthenticationEntryPoint;
+    private final AuthAccessDeniedHandler authAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults()) // CORS 설정 적용
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 사용으로 세션 비활성화
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/auth/**", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // 인증 관련, 기본 에러, Swagger UI 경로 허용
-                        .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
+                                .requestMatchers("/api/auth/signup", "/api/auth/login", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // 인증 관련, 기본 에러, Swagger UI 경로 허용
+                                .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
                         //.anyRequest().permitAll() // 모든 요청 허용
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
                 .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint((request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))); // 인증 실패 시 401 응답
+                        .authenticationEntryPoint(authAuthenticationEntryPoint)
+                        .accessDeniedHandler(authAccessDeniedHandler)
+                );
         return http.build();
     }
 
@@ -70,6 +62,17 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
 }
 
