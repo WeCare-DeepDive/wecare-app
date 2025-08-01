@@ -1,6 +1,7 @@
 package com.example.wecare.common.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
@@ -17,11 +18,18 @@ import org.springframework.context.annotation.Configuration;
         })
 @Configuration
 @SecurityScheme(
-        name = "bearerAuth",
+        name = "Authorization",
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "JWT",
-        description = "JWT Authorization"
+        description = "토큰 원본 사용 (Bearer 없이)"
+)
+@SecurityScheme(
+        name = "Refresh-Token",
+        type = SecuritySchemeType.APIKEY,
+        in = SecuritySchemeIn.HEADER,
+        paramName = "Refresh-Token",
+        description = "접미사로 \"Bearer \" 추가해야 함 (공백 주의)"
 )
 public class SwaggerConfig {
     @Bean
