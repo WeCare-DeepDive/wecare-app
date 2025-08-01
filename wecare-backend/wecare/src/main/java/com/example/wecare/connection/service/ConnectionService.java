@@ -1,6 +1,5 @@
 package com.example.wecare.connection.service;
 
-import com.example.wecare.common.code.AuthResponseCode;
 import com.example.wecare.common.code.GeneralResponseCode;
 import com.example.wecare.common.exception.ApiException;
 import com.example.wecare.connection.domain.Connection;
@@ -44,15 +43,12 @@ public class ConnectionService {
         return connections.stream().map(ConnectionDto::fromEntity).toList();
     }
 
+    @PreAuthorize("@connectionAccessHandler.ownershipCheck(#connectionId)")
     @Transactional
-    public void deactivateConnection(Long targetUserId) {
-        Member currentMember = getCurrentMember();
-
+    public void deactivateConnection(Long connectionId) {
         // 연결 해제하고자 하는 대상 사용자가 없으면 논리적으로 연결도 없으므로 Connection에 대한 NOT_FOUND로 간주
-        Member targetUser = memberRepository.findById(targetUserId)
+        Connection connection = connectionRepository.findById(connectionId)
                 .orElseThrow(() -> new ApiException(GeneralResponseCode.CONNECTION_NOT_FOUND));
-
-        Connection connection = validateAndGetConnection(currentMember, targetUser);
 
         // 비활성화 된 연결의 경우 soft-deleted, 외부적으로 NOT_FOUND 반환
         if (!connection.isActive()) {
@@ -64,24 +60,6 @@ public class ConnectionService {
         connectionRepository.save(connection);
     }
 
-    @Transactional
-    public void reactivateConnection(Long targetUserId) {
-        Member currentMember = getCurrentMember();
-
-        Member targetUser = memberRepository.findById(targetUserId)
-                .orElseThrow(() -> new ApiException(
-                        AuthResponseCode.MEMBER_NOT_FOUND, "연결하고자 하는 사용자를 찾을 수 없습니다."));
-
-        Connection connection = validateAndGetConnection(currentMember, targetUser);
-
-        if (connection.isActive()) {
-            throw new ApiException(GeneralResponseCode.DUPLICATED_RELATIONSHIP, "이미 연결이 활성화 상태입니다.");
-        }
-
-        connection.setActive(true);
-        connectionRepository.save(connection);
-    }
-
     @PreAuthorize("@connectionAccessHandler.ownershipCheck(#connectionId)")
     @Transactional
     public void updateRelationship(Long connectionId, UpdateRelationRequest request) {
@@ -90,14 +68,6 @@ public class ConnectionService {
 
         connection.setRelationshipType(request.getRelationshipType());
         connectionRepository.save(connection);
-    }
-
-    private Connection validateAndGetConnection(Member currentMember, Member targetUser) {
-        Member guardian = currentMember.getRole() == Role.GUARDIAN ? currentMember : targetUser;
-        Member dependent = currentMember.getRole() == Role.DEPENDENT ? currentMember : targetUser;
-
-        return connectionRepository.findByGuardianAndDependent(guardian, dependent)
-                .orElseThrow(() -> new ApiException(GeneralResponseCode.CONNECTION_NOT_FOUND));
     }
 
     private Member getCurrentMember() {
