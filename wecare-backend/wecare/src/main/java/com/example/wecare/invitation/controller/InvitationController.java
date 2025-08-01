@@ -5,6 +5,7 @@ import com.example.wecare.invitation.dto.InvitationDto;
 import com.example.wecare.invitation.service.InvitationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/invitations")
 @RequiredArgsConstructor
+@Tag(name = "초대 서비스", description = "초대 코드 생성, 수락 등")
 public class InvitationController {
     private final InvitationService invitationService;
     
