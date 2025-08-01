@@ -22,6 +22,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
+    private final JwtRedisService jwtRedisService;
     private final MemberRepository memberRepository;
 
     @Override
@@ -37,7 +38,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7); // "Bearer " 제거
 
-        if (!jwtUtil.validateToken(token)) {
+        if (!jwtUtil.validateToken(token) ||
+                jwtRedisService.isTokenLogout(token) ||
+                jwtRedisService.isTokenWithdrawn(token)) {
             throw new BadCredentialsException("유효하지 않은 토큰입니다."); //401
         }
 

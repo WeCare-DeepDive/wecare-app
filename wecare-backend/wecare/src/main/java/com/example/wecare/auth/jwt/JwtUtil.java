@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtUtil {
-    private final JwtRedisService jwtRedisService;
     private final JwtProperties jwtProperties;
 
     // Access 토큰 생성
@@ -79,11 +78,6 @@ public class JwtUtil {
 
     // 토큰의 유효성 + 만료일자 확인 + Blacklist 검증
     public boolean validateToken(String token) {
-        if(!jwtRedisService.isTokenLogout(token) || !jwtRedisService.isTokenWithdrawn(token)){
-            Date date = new Date();
-            log.error("Invalid JWT token inspected : {}", date);
-            return false;
-        }
         try {
             Jwts.parser()
                     .verifyWith(jwtProperties.getSecretKey())
