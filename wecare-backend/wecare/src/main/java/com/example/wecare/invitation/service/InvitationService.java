@@ -2,13 +2,13 @@ package com.example.wecare.invitation.service;
 
 import com.example.wecare.common.code.GeneralResponseCode;
 import com.example.wecare.common.exception.ApiException;
+import com.example.wecare.connection.code.RelationshipType;
+import com.example.wecare.connection.domain.Connection;
+import com.example.wecare.connection.repository.ConnectionRepository;
 import com.example.wecare.invitation.dto.InvitationDto;
 import com.example.wecare.member.code.Role;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.repository.MemberRepository;
-import com.example.wecare.connection.domain.Connection;
-import com.example.wecare.connection.code.RelationshipType;
-import com.example.wecare.connection.repository.ConnectionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -52,14 +52,19 @@ public class InvitationService {
         Member guardian = inviter.getRole() == Role.GUARDIAN ? inviter : invitee;
         Member dependent = inviter.getRole() == Role.DEPENDENT ? invitee : inviter;
 
-        Connection newConnection = Connection.builder()
-                .guardian(guardian)
-                .dependent(dependent)
-                .relationshipType(relationshipType)
-                .build();
+        Connection connection = connectionRepository.findByGuardianAndDependent(guardian, dependent)
+                .orElse(
+                        Connection.builder()
+                                .guardian(guardian)
+                                .dependent(dependent)
+                                .relationshipType(relationshipType)
+                                .build()
+                );
+
+        connection.setActive(true);
 
         // 연결 정보 저장
-        connectionRepository.save(newConnection);
+        connectionRepository.save(connection);
 
         // 초대 코드 만료
         invitationRedisService.deleteInvitationCode(invitationCode);
