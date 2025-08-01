@@ -27,7 +27,6 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
