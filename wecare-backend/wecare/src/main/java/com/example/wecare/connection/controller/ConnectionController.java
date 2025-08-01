@@ -42,7 +42,11 @@ public class ConnectionController {
         return ResponseEntity.ok("연결이 해제되었습니다.");
     }
 
-    // 연결 정보 수정 ex) 보호자, 피보호자 간 관계 (가족, 친구 등)
+    @Operation(
+            summary = "연결 정보 수정",
+            description = "연결 간 관계 재설정",
+            security = @SecurityRequirement(name = "Authorization")
+    )
     @PatchMapping("/{connectionId}")
     public ResponseEntity<String> relationshipConnection(
             @PathVariable Long connectionId,
