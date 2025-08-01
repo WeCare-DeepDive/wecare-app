@@ -16,4 +16,8 @@ public interface ConnectionRepository extends JpaRepository<Connection, Long> {
     List<Connection> findByGuardianAndActiveTrue(Member guardian);
 
     List<Connection> findByDependentAndActiveTrue(Member dependent);
+
+    boolean existsByIdAndGuardian_Id(Long id, Long guardianId);
+
+    boolean existsByIdAndDependent_Id(Long connectionId, Long id);
 }

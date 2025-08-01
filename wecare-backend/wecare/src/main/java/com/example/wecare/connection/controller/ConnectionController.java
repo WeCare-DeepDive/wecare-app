@@ -1,7 +1,9 @@
 package com.example.wecare.connection.controller;
 
-import com.example.wecare.connection.domain.Connection;
+import com.example.wecare.connection.dto.ConnectionDto;
+import com.example.wecare.connection.dto.UpdateRelationRequest;
 import com.example.wecare.connection.service.ConnectionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +17,7 @@ public class ConnectionController {
     private final ConnectionService connectionService;
 
     @GetMapping("")
-    public ResponseEntity<List<Connection>> getMyConnections() {
+    public ResponseEntity<List<ConnectionDto>> getMyConnections() {
         return ResponseEntity.ok(connectionService.getMyConnections());
     }
 
@@ -34,11 +36,12 @@ public class ConnectionController {
     }
 
     // 연결 정보 수정 ex) 보호자, 피보호자 간 관계 (가족, 친구 등)
-    @PatchMapping("/{targetUserId}/relationship")
+    @PatchMapping("/{connectionId}")
     public ResponseEntity<String> relationshipConnection(
-            @PathVariable Long targetUserId
+            @PathVariable Long connectionId,
+            @RequestBody @Valid UpdateRelationRequest relationshipType
     ) {
-        connectionService.updateRelationship(targetUserId);
+        connectionService.updateRelationship(connectionId, relationshipType);
 
         return ResponseEntity.ok("연결 정보가 수정되었습니다.");
     }

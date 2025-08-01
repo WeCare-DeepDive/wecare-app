@@ -4,12 +4,15 @@ import com.example.wecare.common.code.AuthResponseCode;
 import com.example.wecare.common.code.GeneralResponseCode;
 import com.example.wecare.common.exception.ApiException;
 import com.example.wecare.connection.domain.Connection;
+import com.example.wecare.connection.dto.ConnectionDto;
+import com.example.wecare.connection.dto.UpdateRelationRequest;
 import com.example.wecare.connection.repository.ConnectionRepository;
 import com.example.wecare.member.code.Role;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,27 +28,25 @@ public class ConnectionService {
     private final ConnectionRepository connectionRepository;
 
     @Transactional(readOnly = true)
-    public List<Connection> getMyConnections() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Member currentMember = (Member) auth.getPrincipal();
-        
+    public List<ConnectionDto> getMyConnections() {
+        Member currentMember = getCurrentMember();
+
         // 활성화된 연결만 반환
         List<Connection> connections;
-        if(currentMember.getRole() == Role.GUARDIAN){
+        if (currentMember.getRole() == Role.GUARDIAN) {
             connections = connectionRepository.findByGuardianAndActiveTrue(currentMember);
         } else {
             connections = connectionRepository.findByDependentAndActiveTrue(currentMember);
         }
-        
+
         // DB 제약조건에 사용자 외래키 on delete cascade 적용되어 있으므로 별도 검증 과정 필요 없음
 
-        return connections;
+        return connections.stream().map(ConnectionDto::fromEntity).toList();
     }
 
     @Transactional
     public void deactivateConnection(Long targetUserId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member currentMember = (Member) authentication.getPrincipal();
+        Member currentMember = getCurrentMember();
 
         // 연결 해제하고자 하는 대상 사용자가 없으면 논리적으로 연결도 없으므로 Connection에 대한 NOT_FOUND로 간주
         Member targetUser = memberRepository.findById(targetUserId)
@@ -65,8 +66,7 @@ public class ConnectionService {
 
     @Transactional
     public void reactivateConnection(Long targetUserId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member currentMember = (Member) authentication.getPrincipal();
+        Member currentMember = getCurrentMember();
 
         Member targetUser = memberRepository.findById(targetUserId)
                 .orElseThrow(() -> new ApiException(
@@ -82,18 +82,26 @@ public class ConnectionService {
         connectionRepository.save(connection);
     }
 
+    @PreAuthorize("@connectionAccessHandler.ownershipCheck(#connectionId)")
     @Transactional
-    public void updateRelationship(Long targetUserId) {
+    public void updateRelationship(Long connectionId, UpdateRelationRequest request) {
+        Connection connection = connectionRepository.findById(connectionId)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.CONNECTION_NOT_FOUND));
 
+        connection.setRelationshipType(request.getRelationshipType());
+        connectionRepository.save(connection);
     }
 
     private Connection validateAndGetConnection(Member currentMember, Member targetUser) {
         Member guardian = currentMember.getRole() == Role.GUARDIAN ? currentMember : targetUser;
         Member dependent = currentMember.getRole() == Role.DEPENDENT ? currentMember : targetUser;
 
-        Connection connection = connectionRepository.findByGuardianAndDependent(guardian, dependent)
+        return connectionRepository.findByGuardianAndDependent(guardian, dependent)
                 .orElseThrow(() -> new ApiException(GeneralResponseCode.CONNECTION_NOT_FOUND));
+    }
 
-        return connection;
+    private Member getCurrentMember() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (Member) authentication.getPrincipal();
     }
 }
