@@ -1,13 +1,13 @@
 package com.example.wecare.common.config;
 
+import com.example.wecare.auth.exception.AuthAccessDeniedHandler;
+import com.example.wecare.auth.exception.AuthAuthenticationEntryPoint;
 import com.example.wecare.auth.jwt.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,6 +28,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthAuthenticationEntryPoint authAuthenticationEntryPoint;
+    private final AuthAccessDeniedHandler authAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,7 +44,9 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
                 .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint((request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))); // 인증 실패 시 401 응답
+                        .authenticationEntryPoint(authAuthenticationEntryPoint)
+                        .accessDeniedHandler(authAccessDeniedHandler)
+                );
         return http.build();
     }
 

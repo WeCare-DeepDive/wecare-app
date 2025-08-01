@@ -100,16 +100,6 @@ public class JwtUtil {
         return Long.parseLong(claims.getSubject());
     }
 
-    // 토큰에서 username 추출
-    public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(jwtProperties.getSecretKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        return claims.getSubject();
-    }
-
     // 토큰의 만료 시간 조회
     public Date getExpirationFromToken(String token) {
         Claims claims = Jwts.parser()

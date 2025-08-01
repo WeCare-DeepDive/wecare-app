@@ -1,5 +1,6 @@
 package com.example.wecare.auth.jwt;
 
+import com.example.wecare.auth.exception.AuthAuthenticationEntryPoint;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.repository.MemberRepository;
 import jakarta.servlet.FilterChain;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -24,6 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final JwtRedisService jwtRedisService;
     private final MemberRepository memberRepository;
+    private final AuthAuthenticationEntryPoint authAuthenticationEntryPoint;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -38,10 +41,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7); // "Bearer " 제거
 
-        if (!jwtUtil.validateToken(token) ||
-                jwtRedisService.isTokenLogout(token) ||
-                jwtRedisService.isTokenWithdrawn(token)) {
-            throw new BadCredentialsException("유효하지 않은 토큰입니다."); //401
+        try{
+            if (!jwtUtil.validateToken(token) ||
+                    jwtRedisService.isTokenLogout(token) ||
+                    jwtRedisService.isTokenWithdrawn(token)) {
+                throw new BadCredentialsException("유효하지 않은 토큰입니다."); //401
+            }
+        } catch (AuthenticationException e){
+            SecurityContextHolder.clearContext();
+            authAuthenticationEntryPoint.commence(request, response, e);
+            return;
         }
 
         // 토큰으로부터 사용자 ID 파싱

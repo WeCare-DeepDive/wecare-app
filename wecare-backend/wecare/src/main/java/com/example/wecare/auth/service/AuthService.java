@@ -20,6 +20,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -36,10 +40,16 @@ public class AuthService {
             throw new ApiException(GeneralResponseCode.DUPLICATED_USERNAME);
         }
 
+        if (request.getBirthDate().isAfter(LocalDate.now())){
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "생년월일은 현재보다 미래일 수 없습니다.");
+        }
+
         Member member = Member.builder()
                 .username(request.getUsername())
                 .name(request.getName())
                 .role(request.getRole())
+                .gender(request.getGender())
+                .birthDate(Timestamp.valueOf(request.getBirthDate().atStartOfDay()))
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
 
@@ -56,45 +66,45 @@ public class AuthService {
 
         Member member = (Member) auth.getPrincipal();
 
+        String refreshToken = jwtUtil.generateRefreshToken(auth);
+        jwtRedisService.saveRefreshToken(refreshToken);
+
         return LoginResponse.builder()
                 .memberId(member.getId())
                 .accessToken(jwtUtil.generateAccessToken(auth))
-                .refreshToken(jwtUtil.generateRefreshToken(auth))
+                .refreshToken(refreshToken)
                 .build();
     }
 
     @Transactional
     public void logout(Long memberId, String accessToken, String refreshToken) {
-        if (jwtUtil.validateToken(refreshToken)) {
+        if (!jwtUtil.validateToken(refreshToken)) {
+            log.error("Invalid JWT token inspected : {} in Logging out {}", refreshToken, LocalDateTime.now());
             throw new ApiException(AuthResponseCode.INVALID_TOKEN);
         }
 
         memberRepository.findById(memberId)
                 .orElseThrow(() -> new ApiException(AuthResponseCode.MEMBER_NOT_FOUND));
 
-        resetSecurityContext(); //인증 정보 초기화
-
         jwtRedisService.deleteRefreshToken(refreshToken);
         jwtRedisService.logoutToken(accessToken); //Redis 블랙리스트에 토큰 추가
         jwtRedisService.logoutToken(refreshToken);
+
+        SecurityContextHolder.clearContext(); //인증 정보 초기화
     }
 
     @Transactional(readOnly = true)
     public LoginResponse reissue(String accessToken, String refreshToken) {
-        if (!jwtUtil.validateToken(accessToken) || !jwtRedisService.hasRefreshToken(accessToken)) {
-            throw new ApiException(AuthResponseCode.INVALID_TOKEN);
-        }
         if (!jwtUtil.validateToken(refreshToken) || !jwtRedisService.hasRefreshToken(refreshToken)) {
             throw new ApiException(AuthResponseCode.INVALID_TOKEN);
         }
 
-        // 2. Refresh Token 에서 Authentication 추출
-        Authentication authentication = jwtUtil.getAuthenticationFromToken(refreshToken);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         // 4. 새로운 토큰 생성
         LoginResponse loginResponse = LoginResponse.builder()
-                .accessToken(jwtUtil.generateAccessToken(authentication))
-                .refreshToken(jwtUtil.generateRefreshToken(authentication))
+                .accessToken(jwtUtil.generateAccessToken(auth))
+                .refreshToken(jwtUtil.generateRefreshToken(auth))
                 .build();
 
         jwtRedisService.saveRefreshToken(loginResponse.getRefreshToken());
@@ -105,11 +115,6 @@ public class AuthService {
         jwtRedisService.logoutToken(accessToken);
 
         return loginResponse;
-    }
-
-    private void resetSecurityContext() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        auth.setAuthenticated(false); //인증 Context 초기화
     }
 }
 
