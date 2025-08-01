@@ -12,20 +12,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class PartnerAccessHandler extends AccessHandler {
+public class DependentAccessHandler extends AccessHandler {
     private final ConnectionRepository connectionRepository;
 
     @Override
-    boolean isResourceOwner(Long memberId) {
+    boolean isResourceOwner(Long dependentId) {
         Member currentMember = getCurrentMember();
-        boolean isConnected;
 
         if (currentMember.getRole() == Role.GUARDIAN) {
-            isConnected = connectionRepository.existsByGuardianIdAndDependentIdAndActiveTrue(currentMember.getId(), memberId);
-        } else {
-            isConnected = connectionRepository.existsByGuardianIdAndDependentIdAndActiveTrue(memberId, currentMember.getId());
+            return connectionRepository.existsByGuardianIdAndDependentIdAndActiveTrue(currentMember.getId(), dependentId);
         }
 
-        return isConnected;
+        return currentMember.getId().equals(dependentId);
     }
 }

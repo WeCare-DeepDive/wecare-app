@@ -10,8 +10,8 @@ import com.example.wecare.routine.domain.Routine;
 import com.example.wecare.routine.domain.NotificationType;
 import com.example.wecare.routine.domain.SoundType;
 import com.example.wecare.routine.domain.RoutineType;
+import com.example.wecare.routine.dto.RoutineDto;
 import com.example.wecare.routine.dto.RoutineRequest;
-import com.example.wecare.routine.dto.RoutineMemoRequest;
 import com.example.wecare.routine.repository.RoutineRepository;
 import com.example.wecare.routine.service.RoutineService;
 import org.junit.jupiter.api.BeforeEach;
@@ -358,7 +358,7 @@ class RoutineServiceTest {
         when(routineRepository.findByGuardianId(guardian.getId())).thenReturn(Arrays.asList(routine1, routine2));
 
         // when
-        List<com.example.wecare.routine.dto.RoutineResponse> routines = routineService.getRoutinesByGuardian();
+        List<RoutineDto> routines = routineService.getRoutinesByGuardian();
 
         // then
         assertThat(routines).hasSize(2);
@@ -375,7 +375,7 @@ class RoutineServiceTest {
         when(routineRepository.findByDependentId(dependent.getId())).thenReturn(Arrays.asList(routine1, routine2));
 
         // when
-        List<com.example.wecare.routine.dto.RoutineResponse> routines = routineService.getRoutinesByDependent();
+        List<RoutineDto> routines = routineService.getRoutinesByDependent();
 
         // then
         assertThat(routines).hasSize(2);
@@ -391,7 +391,7 @@ class RoutineServiceTest {
         when(routineRepository.findById(routine.getId())).thenReturn(Optional.of(routine));
 
         // when
-        com.example.wecare.routine.dto.RoutineResponse response = routineService.getRoutineById(routine.getId());
+        RoutineDto response = routineService.getRoutineById(routine.getId());
 
         // then
         assertThat(response).isNotNull();
@@ -407,7 +407,7 @@ class RoutineServiceTest {
         when(routineRepository.findById(routine.getId())).thenReturn(Optional.of(routine));
 
         // when
-        com.example.wecare.routine.dto.RoutineResponse response = routineService.getRoutineById(routine.getId());
+        RoutineDto response = routineService.getRoutineById(routine.getId());
 
         // then
         assertThat(response).isNotNull();

@@ -1,13 +1,13 @@
 package com.example.wecare.routine.repository;
 
-import com.example.wecare.member.domain.Member;
 import com.example.wecare.routine.domain.Routine;
+import com.example.wecare.routine.domain.RoutineAlert;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface RoutineRepository extends JpaRepository<Routine, Long> {
-    List<Routine> findAllByDependent(Member dependent);
+public interface RoutineAlertRepository extends JpaRepository<RoutineAlert, Long> {
+    Optional<RoutineAlert> findByRoutine(Routine routine);
 }
