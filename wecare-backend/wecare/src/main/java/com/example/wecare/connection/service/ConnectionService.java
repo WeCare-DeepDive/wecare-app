@@ -4,7 +4,7 @@ import com.example.wecare.common.code.GeneralResponseCode;
 import com.example.wecare.common.exception.ApiException;
 import com.example.wecare.connection.domain.Connection;
 import com.example.wecare.connection.dto.ConnectionDto;
-import com.example.wecare.connection.dto.UpdateRelationRequest;
+import com.example.wecare.connection.dto.UpdateRelationshipRequest;
 import com.example.wecare.connection.repository.ConnectionRepository;
 import com.example.wecare.member.code.Role;
 import com.example.wecare.member.domain.Member;
@@ -62,7 +62,7 @@ public class ConnectionService {
 
     @PreAuthorize("@connectionAccessHandler.ownershipCheck(#connectionId)")
     @Transactional
-    public void updateRelationship(Long connectionId, UpdateRelationRequest request) {
+    public void updateRelationship(Long connectionId, UpdateRelationshipRequest request) {
         Connection connection = connectionRepository.findById(connectionId)
                 .orElseThrow(() -> new ApiException(GeneralResponseCode.CONNECTION_NOT_FOUND));
 

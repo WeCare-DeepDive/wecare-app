@@ -1,7 +1,7 @@
 package com.example.wecare.connection.controller;
 
 import com.example.wecare.connection.dto.ConnectionDto;
-import com.example.wecare.connection.dto.UpdateRelationRequest;
+import com.example.wecare.connection.dto.UpdateRelationshipRequest;
 import com.example.wecare.connection.service.ConnectionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -50,7 +50,7 @@ public class ConnectionController {
     @PatchMapping("/{connectionId}")
     public ResponseEntity<String> relationshipConnection(
             @PathVariable Long connectionId,
-            @RequestBody @Valid UpdateRelationRequest relationshipType
+            @RequestBody @Valid UpdateRelationshipRequest relationshipType
     ) {
         connectionService.updateRelationship(connectionId, relationshipType);
 
