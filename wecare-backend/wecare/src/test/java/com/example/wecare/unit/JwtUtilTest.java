@@ -1,5 +1,4 @@
-
-package com.example.wecare.unit.security;
+package com.example.wecare.unit;
 
 import com.example.wecare.auth.jwt.JwtProperties;
 import com.example.wecare.auth.jwt.JwtUtil;
@@ -15,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.nio.charset.StandardCharsets;

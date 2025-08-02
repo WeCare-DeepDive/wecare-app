@@ -34,7 +34,7 @@ public class RoutineAccessHandler extends AccessHandler {
         }
 
         return routineRepository.findById(routineId)
-                .filter((r) -> currentMember.getId().equals(r.getId()))
+                .filter((r) -> currentMember.getId().equals(r.getDependent().getId()))
                 .isPresent();
     }
 }

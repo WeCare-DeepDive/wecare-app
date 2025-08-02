@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS routines (
 
 -- 4. 루틴 반복 요일 테이블
 CREATE TABLE IF NOT EXISTS routine_repeat_days (
-    id BIGINT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     routine_id BIGINT NOT NULL,
     repeat_day ENUM('MON','TUE','WED','THU','FRI','SAT','SUN') NOT NULL,
     UNIQUE (routine_id, repeat_day),
@@ -72,7 +72,6 @@ CREATE TABLE IF NOT EXISTS routine_alerts (
 CREATE TABLE IF NOT EXISTS routine_histories (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     routine_id BIGINT,
-    status ENUM('COMPLETED', 'FAILED') NOT NULL,
     completed_date DATE NOT NULL,
     completed_time TIME NOT NULL,
 

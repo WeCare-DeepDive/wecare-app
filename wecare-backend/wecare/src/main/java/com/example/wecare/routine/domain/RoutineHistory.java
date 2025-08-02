@@ -1,10 +1,8 @@
 package com.example.wecare.routine.domain;
 
-import com.example.wecare.routine.code.HistoryStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -24,10 +22,6 @@ public class RoutineHistory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "routine_id")
     private Routine routine;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private HistoryStatus status;
 
     @Column(name = "completed_date", nullable = false)
     private LocalDate completedDate;

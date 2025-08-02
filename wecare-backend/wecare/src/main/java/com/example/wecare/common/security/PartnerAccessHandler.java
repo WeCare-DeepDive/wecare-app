@@ -18,14 +18,11 @@ public class PartnerAccessHandler extends AccessHandler {
     @Override
     boolean isResourceOwner(Long memberId) {
         Member currentMember = getCurrentMember();
-        boolean isConnected;
 
         if (currentMember.getRole() == Role.GUARDIAN) {
-            isConnected = connectionRepository.existsByGuardianIdAndDependentIdAndActiveTrue(currentMember.getId(), memberId);
-        } else {
-            isConnected = connectionRepository.existsByGuardianIdAndDependentIdAndActiveTrue(memberId, currentMember.getId());
+            return connectionRepository.existsByGuardianIdAndDependentIdAndActiveTrue(currentMember.getId(), memberId);
         }
 
-        return isConnected;
+        return currentMember.getId().equals(memberId);
     }
 }
