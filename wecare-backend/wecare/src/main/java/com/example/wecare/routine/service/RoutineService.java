@@ -346,9 +346,10 @@ public class RoutineService {
         }*/
 
         // 루틴 시작 시간 이전에는 완료 처리할 수 없도록 막기
+        /*
         if (now.toLocalTime().isBefore(routine.getStartTime())) {
             throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 시작 시간 이전에는 완료 처리할 수 없습니다.");
-        }
+        }*/
     }
 
     private Member getCurrentMember() {
