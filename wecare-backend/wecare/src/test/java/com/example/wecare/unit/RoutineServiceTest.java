@@ -182,7 +182,7 @@ public class RoutineServiceTest {
         // given: 피보호자가 특정 루틴을 완료했음을 알림 (입력값은 routineId)
         setAuthentication(dependent); // 피보호자로 로그인
         Routine routine = createRoutine(1L, dependent, "완료할 루틴");
-        routine.setStartTime(LocalTime.now().minusHours(1));
+        routine.setStartTime(LocalTime.of(0, 0));
 
         DayOfWeek today = LocalDate.now().getDayOfWeek();
         RepeatDay todayRepeatDay = RepeatDay.valueOf(today.name().substring(0, 3));
