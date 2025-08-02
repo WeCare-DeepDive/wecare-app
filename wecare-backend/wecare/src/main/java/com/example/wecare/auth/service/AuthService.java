@@ -49,7 +49,7 @@ public class AuthService {
                 .name(request.getName())
                 .role(request.getRole())
                 .gender(request.getGender())
-                .birthDate(Timestamp.valueOf(request.getBirthDate().atStartOfDay()))
+                .birthDate(request.getBirthDate())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
 

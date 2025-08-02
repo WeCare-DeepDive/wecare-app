@@ -5,7 +5,7 @@ import com.example.wecare.routine.code.RoutineType;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -43,7 +43,7 @@ public class Routine {
     private String dependentMemo;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
     @Column(name = "updated_at", insertable = false)
-    private Timestamp updatedAt;
+    private LocalDateTime updatedAt;
 }

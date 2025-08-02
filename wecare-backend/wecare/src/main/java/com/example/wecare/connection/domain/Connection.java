@@ -5,7 +5,7 @@ import com.example.wecare.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -36,7 +36,7 @@ public class Connection {
     private RelationshipType relationshipType;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
     @Column(name = "updated_at", insertable = false)
-    private Timestamp updatedAt;
+    private LocalDateTime updatedAt;
 }

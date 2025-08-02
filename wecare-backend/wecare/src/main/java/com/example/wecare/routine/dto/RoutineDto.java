@@ -5,7 +5,7 @@ import com.example.wecare.routine.code.RoutineType;
 import com.example.wecare.routine.domain.Routine;
 import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -24,8 +24,8 @@ public class RoutineDto {
     private String guardianMemo;
     private String dependentMemo;
     private RoutineAlertDto alert;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static RoutineDto fromEntity(
             Routine routine,

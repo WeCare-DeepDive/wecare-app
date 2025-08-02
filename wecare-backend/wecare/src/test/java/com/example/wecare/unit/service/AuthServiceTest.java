@@ -66,7 +66,7 @@ class AuthServiceTest {
             .role(Role.GUARDIAN)
             .name("test")
             .username("test1234")
-            .birthDate(Timestamp.valueOf(LocalDateTime.of(2000, 2, 20, 0, 00)))
+            .birthDate(LocalDate.of(2000, 2, 20))
             .build();
 
     @Test
