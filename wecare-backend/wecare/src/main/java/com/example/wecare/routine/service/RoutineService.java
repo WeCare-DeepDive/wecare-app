@@ -301,14 +301,16 @@ public class RoutineService {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Member currentMember = (Member) auth.getPrincipal();
-
+        /*
         if (currentMember.getRole() != Role.DEPENDENT) {
             throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "피보호자만 루틴의 수행 여부를 조작할 수 있습니다.");
         }
 
+         */
         Routine routine = history.getRoutine();
 
         // 오늘이 루틴에 해당하는 요일인지 확인
+        /*
         List<RoutineRepeatDay> repeatDays = routineRepeatDayRepository.findAllByRoutine(routine);
         if (repeatDays.stream()
                 .map(r -> r.getRepeatDay().getDayOfWeek())
@@ -317,7 +319,7 @@ public class RoutineService {
                 || routine.getEndTime() != null && now.toLocalTime().isAfter(routine.getEndTime())
         ) {
             throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "현재 루틴 수행 기록을 수정할 수 없습니다.");
-        }
+        }*/
 
         routineHistoryRepository.delete(history);
     }
