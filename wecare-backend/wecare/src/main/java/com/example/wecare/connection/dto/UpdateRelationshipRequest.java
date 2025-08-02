@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateRelationRequest {
+public class UpdateRelationshipRequest {
     @NotNull(message = "상대방과의 관계는 필수 입력 값입니다.")
     private RelationshipType relationshipType;
 }
