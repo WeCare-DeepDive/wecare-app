@@ -18,6 +18,8 @@ import com.example.wecare.routine.repository.RoutineHistoryRepository;
 import com.example.wecare.routine.repository.RoutineRepeatDayRepository;
 import com.example.wecare.routine.repository.RoutineRepository;
 import lombok.RequiredArgsConstructor;
+import com.example.wecare.common.security.PartnerAccessHandler;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
