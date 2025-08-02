@@ -39,7 +39,7 @@ public class RoutineController {
             description = "피보호자 본인 또는 연결된 보호자만 루틴의 식별자를 통해 접근 가능",
             security = @SecurityRequirement(name = "Authorization")
     )
-    @GetMapping("/{routineId}")
+    @GetMapping("/{routineId}/repeat")
     public ResponseEntity<List<RoutineRepeatDayDto>> getRepeatDaysByRoutineId(
             @PathVariable Long routineId
     ) {
