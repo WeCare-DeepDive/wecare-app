@@ -8,7 +8,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -39,17 +40,17 @@ public class Member implements UserDetails {
     private Gender gender;
 
     @Column(name = "birth_date")
-    private Timestamp birthDate;
+    private LocalDate birthDate;
 
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private Role role;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", insertable = false)
-    private Timestamp updatedAt;
+    private LocalDateTime updatedAt;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -5,7 +5,7 @@ import com.example.wecare.connection.code.RelationshipType;
 import com.example.wecare.connection.domain.Connection;
 import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -19,8 +19,8 @@ public class ConnectionDto {
     private boolean active;
     private RelationshipType relationshipType;
 
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static ConnectionDto fromEntity(Connection connection) {
         return ConnectionDto.builder()

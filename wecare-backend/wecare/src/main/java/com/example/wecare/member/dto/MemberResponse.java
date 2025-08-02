@@ -7,7 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -17,10 +18,10 @@ public class MemberResponse {
     private String username;
     private String name;
     private Gender gender;
-    private Timestamp birthDate;
+    private LocalDate birthDate;
     private Role role;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static MemberResponse fromEntity(Member member) {
         return MemberResponse.builder()
