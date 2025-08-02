@@ -5,6 +5,7 @@ import com.example.wecare.routine.code.NotificationType;
 import com.example.wecare.routine.code.RoutineType;
 import com.example.wecare.routine.code.SoundType;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -18,9 +19,11 @@ import java.time.LocalTime;
 @AllArgsConstructor
 public class RoutineRequest {
     @NotNull(message = "시작 시간은 필수입니다.")
-    @JsonFormat(pattern = "HH:mm")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    @Schema(type = "string", pattern = "HH:mm:ss", example = "14:30:00")
     private LocalTime startTime;
-    @JsonFormat(pattern = "HH:mm")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
+    @Schema(type = "string", pattern = "HH:mm:ss", example = "14:30:00")
     private LocalTime endTime;
     @NotBlank(message = "제목은 필수입니다.")
     private String title;
