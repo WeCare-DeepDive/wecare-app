@@ -23,13 +23,11 @@ public class RoutineDto {
     private RoutineType routineType;
     private String guardianMemo;
     private String dependentMemo;
-    private RoutineAlertDto alert;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public static RoutineDto fromEntity(
-            Routine routine,
-            RoutineAlertDto alert
+            Routine routine
     ) {
         return RoutineDto.builder()
                 .id(routine.getId())
@@ -40,7 +38,6 @@ public class RoutineDto {
                 .routineType(routine.getRoutineType())
                 .guardianMemo(routine.getGuardianMemo())
                 .dependentMemo(routine.getDependentMemo())
-                .alert(alert)
                 .createdAt(routine.getCreatedAt())
                 .updatedAt(routine.getUpdatedAt())
                 .build();

@@ -1,6 +1,5 @@
 package com.example.wecare.routine.dto;
 
-import com.example.wecare.routine.code.HistoryStatus;
 import com.example.wecare.routine.domain.RoutineHistory;
 import lombok.*;
 
@@ -15,12 +14,15 @@ import java.time.LocalTime;
 public class RoutineHistoryDto {
     private Long id;
     private Long routineId;
-    private HistoryStatus status;
 
     private LocalDate completedDate;
     private LocalTime completedTime;
 
     public static RoutineHistoryDto fromEntity(RoutineHistory routineHistory) {
+        if (routineHistory == null) {
+            return null;
+        }
+
         return RoutineHistoryDto.builder()
                 .id(routineHistory.getId())
                 .routineId(routineHistory.getRoutine().getId())

@@ -1,19 +1,18 @@
 package com.example.wecare.routine.controller;
 
 import com.example.wecare.routine.code.RepeatDay;
-import com.example.wecare.routine.dto.RoutineDto;
-import com.example.wecare.routine.dto.RoutineHistoryDto;
-import com.example.wecare.routine.dto.RoutineRepeatDayDto;
-import com.example.wecare.routine.dto.RoutineRequest;
+import com.example.wecare.routine.dto.*;
 import com.example.wecare.routine.service.RoutineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -24,51 +23,29 @@ public class RoutineController {
     private final RoutineService routineService;
 
     @Operation(
-            summary = "피보호자 루틴 목록 조회",
-            description = "피보호자 본인 또는 연결된 보호자만 피보호자의 식별자를 통해 접근 가능",
+            summary = "당일 루틴 세부 정보 조회",
+            description = "해당 날짜의 루틴 세부 정보 조회",
+            security = @SecurityRequirement(name = "Authorization")
+    )
+    @GetMapping("/{routineId}/details")
+    public ResponseEntity<RoutineDetailDto> getRoutineDetailByIdAndDate(
+            @PathVariable Long routineId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-mm-dd") LocalDate date
+    ) {
+        return ResponseEntity.ok(routineService.getRoutineDetailByIdAndDate(routineId, date));
+    }
+
+    @Operation(
+            summary = "당일 전체 루틴 목록 조회",
+            description = "해당 날짜의 전체 루틴 + 수행 기록 목록 조회",
             security = @SecurityRequirement(name = "Authorization")
     )
     @GetMapping("/{dependentId}")
-    public ResponseEntity<List<RoutineDto>> getRoutinesByDependentId(
-            @PathVariable Long dependentId
+    public ResponseEntity<List<RoutineWithHistoryDto>> getRoutinesWithHistoryByDependentIdAndDate(
+            @PathVariable Long dependentId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-mm-dd") LocalDate date
     ) {
-        return ResponseEntity.ok(routineService.getRoutinesByDependentId(dependentId));
-    }
-
-    @Operation(
-            summary = "루틴 반복 데이터 조회",
-            description = "피보호자 본인 또는 연결된 보호자만 루틴의 식별자를 통해 접근 가능",
-            security = @SecurityRequirement(name = "Authorization")
-    )
-    @GetMapping("/{routineId}/repeats")
-    public ResponseEntity<List<RoutineRepeatDayDto>> getRepeatDaysByRoutineId(
-            @PathVariable Long routineId
-    ) {
-        return ResponseEntity.ok(routineService.getRepeatDaysByRoutineId(routineId));
-    }
-
-    @Operation(
-            summary = "사용자 루틴 수행 기록 조회",
-            description = "루틴의 성공 여부(COMPLETED, FAILED)와 수행 시간 조회 가능",
-            security = @SecurityRequirement(name = "Authorization")
-    )
-    @GetMapping("/{memberId}/member_histories")
-    public ResponseEntity<List<RoutineHistoryDto>> getRoutineHistoryByMemberId(
-            @PathVariable Long memberId
-    ) {
-        return ResponseEntity.ok(routineService.getHistoriesByMemberId(memberId));
-    }
-
-    @Operation(
-            summary = "특정 루틴의 수행 기록 조회",
-            description = "루틴의 식별자를 통해 해당 루틴의 수행 기록 조회",
-            security = @SecurityRequirement(name = "Authorization")
-    )
-    @GetMapping("/{routineId}/routine_histories")
-    public ResponseEntity<List<RoutineHistoryDto>> getRoutineHistoryByRoutineId(
-            @PathVariable Long routineId
-    ) {
-        return ResponseEntity.ok(routineService.getHistoriesByRoutineId(routineId));
+        return ResponseEntity.ok(routineService.getRoutinesWithHistoryByDependentIdAndDate(dependentId, date));
     }
 
     @Operation(

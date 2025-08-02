@@ -27,7 +27,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -51,11 +50,16 @@ public class RoutineServiceTest {
     @InjectMocks
     private RoutineService routineService;
 
-    @Mock private RoutineRepository routineRepository;
-    @Mock private RoutineAlertRepository routineAlertRepository;
-    @Mock private MemberRepository memberRepository;
-    @Mock private RoutineRepeatDayRepository routineRepeatDayRepository;
-    @Mock private RoutineHistoryRepository routineHistoryRepository;
+    @Mock
+    private RoutineRepository routineRepository;
+    @Mock
+    private RoutineAlertRepository routineAlertRepository;
+    @Mock
+    private MemberRepository memberRepository;
+    @Mock
+    private RoutineRepeatDayRepository routineRepeatDayRepository;
+    @Mock
+    private RoutineHistoryRepository routineHistoryRepository;
 
     private Member dependent;
     private Member guardian;
@@ -128,7 +132,6 @@ public class RoutineServiceTest {
 
         // then: 반환된 `RoutineDto`가 요청한 `RoutineRequest`의 값을 잘 반영하는지 검증
         assertThat(resultDto.getTitle()).isEqualTo(request.getTitle());
-        assertThat(resultDto.getAlert().getIsActive()).isEqualTo(request.getIsAlertActive());
         verify(routineRepository).save(any(Routine.class));
         verify(routineAlertRepository).save(any(RoutineAlert.class));
     }
@@ -151,7 +154,6 @@ public class RoutineServiceTest {
 
         // then: 반환된 `RoutineDto`가 수정 요청(`RoutineRequest`)을 잘 반영하는지 검증
         assertThat(resultDto.getTitle()).isEqualTo("수정된 루틴");
-        assertThat(resultDto.getAlert().getIsActive()).isFalse();
         verify(routineRepository, times(2)).save(any(Routine.class));
         verify(routineAlertRepository).save(any(RoutineAlert.class));
     }
@@ -218,25 +220,5 @@ public class RoutineServiceTest {
 
         // then
         verify(routineRepository).delete(routineToDelete);
-    }
-
-    @DisplayName("피보호자 ID로 루틴 목록 조회 성공")
-    @Test
-    void getRoutinesByDependentId_Success() {
-        // given
-        Routine routine = createRoutine(1L, dependent, "조회될 루틴");
-        RoutineAlert alert = RoutineAlert.builder().routine(routine).isActive(true).build();
-
-        given(memberRepository.findById(dependent.getId())).willReturn(Optional.of(dependent));
-        given(routineRepository.findAllByDependent(dependent)).willReturn(List.of(routine));
-        given(routineAlertRepository.findByRoutine(routine)).willReturn(Optional.of(alert));
-
-        // when
-        List<RoutineDto> result = routineService.getRoutinesByDependentId(dependent.getId());
-
-        // then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getTitle()).isEqualTo("조회될 루틴");
-        verify(routineRepository).findAllByDependent(dependent);
     }
 }
