@@ -20,6 +20,7 @@ export const Colors = {
   purple400: '#C6C9FC',
 
   // Gray Scale
+  gray4: '#D0D0D0',
   gray10: '#60656E',
   gray9: '#8A8D94',
   gray8: '#8E9198',
@@ -60,7 +61,6 @@ export const FontFamily = {
   nanumL: 'NanumSquareRoundOTFL',
   nanumR: 'NanumSquareRoundOTFR',
   pretendard: 'PretendardVariable',
-  pretendardVariable: 'PretendardVariable',
 };
 
 // 폰트 사이즈
