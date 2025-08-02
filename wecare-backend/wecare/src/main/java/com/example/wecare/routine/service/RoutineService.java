@@ -336,11 +336,12 @@ public class RoutineService {
 
         // 오늘이 루틴에 해당하는 요일인지 확인
         List<RoutineRepeatDay> repeatDays = routineRepeatDayRepository.findAllByRoutine(routine);
+        /*
         if (repeatDays.stream()
                 .map(r -> r.getRepeatDay().getDayOfWeek())
                 .noneMatch(day -> day == now.getDayOfWeek())) {
             throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "현재 시간은 반복 요일에 해당하는 요일이 아닙니다.");
-        }
+        }*/
 
         // 루틴 시작 시간 이전에는 완료 처리할 수 없도록 막기
         if (now.toLocalTime().isBefore(routine.getStartTime())) {
