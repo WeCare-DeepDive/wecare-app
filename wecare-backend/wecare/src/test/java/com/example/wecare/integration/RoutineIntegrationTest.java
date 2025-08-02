@@ -23,10 +23,28 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalTime;
 
+import com.example.wecare.routine.code.NotificationType;
+import com.example.wecare.routine.code.RepeatDay;
+import com.example.wecare.routine.code.RoutineType;
+import com.example.wecare.routine.code.SoundType;
+import com.example.wecare.routine.domain.Routine;
+import com.example.wecare.routine.domain.RoutineAlert;
+import com.example.wecare.routine.domain.RoutineHistory;
+import com.example.wecare.routine.domain.RoutineRepeatDay;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.DayOfWeek;
+import java.util.Collections;
+import java.util.List;
+
 import static com.example.wecare.routine.code.NotificationType.NONE;
 import static com.example.wecare.routine.code.RoutineType.MEDICATION;
 import static com.example.wecare.routine.code.SoundType.DEFAULT_SOUND;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -245,12 +263,350 @@ public class RoutineIntegrationTest {
     private RoutineRequest createRoutineRequest(String title) {
         RoutineRequest request = new RoutineRequest();
         request.setTitle(title);
-        request.setStartTime(LocalTime.of(9, 0));
+        request.setStartTime(LocalTime.of(0, 0));
         request.setEndTime(LocalTime.of(10, 0));
         request.setRoutineType(MEDICATION);
         request.setIsAlertActive(true);
         request.setNotificationType(NONE); // Changed from BOTH
         request.setSoundType(DEFAULT_SOUND); // Changed from DEFAULT
         return request;
+    }
+
+    @DisplayName("[통합] 루틴 목록 조회 - 성공 및 인증 실패(401) 테스트")
+    @Test
+    void getRoutinesByDependentId_Success_And_Auth_Fail() throws Exception {
+        // given: 루틴 생성 (테스트를 위해 루틴이 존재해야 함)
+        RoutineRequest createRequest = createRoutineRequest("테스트 루틴");
+        mockMvc.perform(post("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk());
+
+        // when/then: [성공] 유효한 보호자 토큰으로 요청 시 200 OK
+        mockMvc.perform(get("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("테스트 루틴"))
+                .andDo(print());
+
+        // when/then: [인증 실패] 토큰 없이 요청 시 401 Unauthorized
+        mockMvc.perform(get("/api/routines/{dependentId}", dependent.getId()))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+    }
+
+    @DisplayName("[통합] 루틴 반복 데이터 조회 - 성공 및 인증 실패(401) 테스트")
+    @Test
+    void getRepeatDaysByRoutineId_Success_And_Auth_Fail() throws Exception {
+        // given: 루틴 생성 및 루틴 ID 획득
+        RoutineRequest createRequest = createRoutineRequest("반복 요일 테스트 루틴");
+        String responseContent = mockMvc.perform(post("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Long routineId = objectMapper.readTree(responseContent).get("id").asLong();
+
+        // when/then: [성공] 유효한 보호자 토큰으로 요청 시 200 OK
+        mockMvc.perform(get("/api/routines/{routineId}/repeats", routineId)
+                        .header("Authorization", "Bearer " + guardianToken))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        // when/then: [인증 실패] 토큰 없이 요청 시 401 Unauthorized
+        mockMvc.perform(get("/api/routines/{routineId}/repeats", routineId))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+    }
+
+    @DisplayName("[통합] 사용자 루틴 수행 기록 조회 - 성공 및 인증 실패(401) 테스트")
+    @Test
+    void getRoutineHistoryByMemberId_Success_And_Auth_Fail() throws Exception {
+        // given: 루틴 생성 및 완료 (테스트를 위해 기록이 존재해야 함)
+        RoutineRequest createRequest = createRoutineRequest("기록 테스트 루틴");
+        String routineResponseContent = mockMvc.perform(post("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Long routineId = objectMapper.readTree(routineResponseContent).get("id").asLong();
+
+        // 루틴 반복 요일 설정 (현재 요일로)
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        RepeatDay todayRepeatDay = RepeatDay.valueOf(today.name().substring(0, 3));
+        List<RepeatDay> repeatDays = Collections.singletonList(todayRepeatDay);
+
+        mockMvc.perform(put("/api/routines/{routineId}/repeats", routineId)
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(repeatDays)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/routines/{routineId}/complete", routineId)
+                        .header("Authorization", "Bearer " + dependentToken))
+                .andExpect(status().isOk());
+
+        // when/then: [성공] 유효한 피보호자 토큰으로 요청 시 200 OK
+        mockMvc.perform(get("/api/routines/{memberId}/member_histories", dependent.getId())
+                        .header("Authorization", "Bearer " + dependentToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].routineId").value(routineId))
+                .andDo(print());
+
+        // when/then: [인증 실패] 토큰 없이 요청 시 401 Unauthorized
+        mockMvc.perform(get("/api/routines/{memberId}/member_histories", dependent.getId()))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+    }
+
+    @DisplayName("[통합] 특정 루틴의 수행 기록 조회 - 성공 및 인증 실패(401) 테스트")
+    @Test
+    void getRoutineHistoryByRoutineId_Success_And_Auth_Fail() throws Exception {
+        // given: 루틴 생성 및 완료 (테스트를 위해 기록이 존재해야 함)
+        RoutineRequest createRequest = createRoutineRequest("특정 루틴 기록 테스트");
+        String routineResponseContent = mockMvc.perform(post("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Long routineId = objectMapper.readTree(routineResponseContent).get("id").asLong();
+
+        // 루틴 반복 요일 설정 (현재 요일로)
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        RepeatDay todayRepeatDay = RepeatDay.valueOf(today.name().substring(0, 3));
+        List<RepeatDay> repeatDays = Collections.singletonList(todayRepeatDay);
+
+        mockMvc.perform(put("/api/routines/{routineId}/repeats", routineId)
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(repeatDays)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/routines/{routineId}/complete", routineId)
+                        .header("Authorization", "Bearer " + dependentToken))
+                .andExpect(status().isOk());
+
+        // when/then: [성공] 유효한 보호자 토큰으로 요청 시 200 OK
+        mockMvc.perform(get("/api/routines/{routineId}/routine_histories", routineId)
+                        .header("Authorization", "Bearer " + guardianToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].routineId").value(routineId))
+                .andDo(print());
+
+        // when/then: [인증 실패] 토큰 없이 요청 시 401 Unauthorized
+        mockMvc.perform(get("/api/routines/{routineId}/routine_histories", routineId))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+    }
+
+    @DisplayName("[통합] 루틴 업데이트 - 성공 및 인증 실패(401) 테스트")
+    @Test
+    void updateRoutine_Success_And_Auth_Fail() throws Exception {
+        // given: 루틴 생성
+        RoutineRequest createRequest = createRoutineRequest("업데이트 전 루틴");
+        String responseContent = mockMvc.perform(post("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Long routineId = objectMapper.readTree(responseContent).get("id").asLong();
+
+        // given: 업데이트 요청
+        RoutineRequest updateRequest = createRoutineRequest("업데이트 후 루틴");
+        updateRequest.setIsAlertActive(false);
+
+        // when/then: [성공] 유효한 보호자 토큰으로 요청 시 200 OK
+        mockMvc.perform(patch("/api/routines/{routineId}", routineId)
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("업데이트 후 루틴"))
+                .andExpect(jsonPath("$.alert.isActive").value(false))
+                .andDo(print());
+
+        // when/then: [인증 실패] 토큰 없이 요청 시 401 Unauthorized
+        mockMvc.perform(patch("/api/routines/{routineId}", routineId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+    }
+
+    @DisplayName("[통합] 루틴 삭제 - 성공 및 인증 실패(401) 테스트")
+    @Test
+    void deleteRoutine_Success_And_Auth_Fail() throws Exception {
+        // given: 루틴 생성
+        RoutineRequest createRequest = createRoutineRequest("삭제할 루틴");
+        String responseContent = mockMvc.perform(post("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Long routineId = objectMapper.readTree(responseContent).get("id").asLong();
+
+        // when/then: [성공] 유효한 보호자 토큰으로 요청 시 204 No Content
+        mockMvc.perform(delete("/api/routines/{routineId}", routineId)
+                        .header("Authorization", "Bearer " + guardianToken))
+                .andExpect(status().isNoContent())
+                .andDo(print());
+
+        // when/then: [인증 실패] 토큰 없이 요청 시 401 Unauthorized
+        mockMvc.perform(delete("/api/routines/{routineId}", routineId))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+    }
+
+    @DisplayName("[통합] 루틴 반복 데이터 업데이트 - 성공 및 인증 실패(401) 테스트")
+    @Test
+    void updateRoutineRepeat_Success_And_Auth_Fail() throws Exception {
+        // given: 루틴 생성
+        RoutineRequest createRequest = createRoutineRequest("반복 요일 업데이트 루틴");
+        String responseContent = mockMvc.perform(post("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Long routineId = objectMapper.readTree(responseContent).get("id").asLong();
+
+        // given: 업데이트 요청 (화, 목, 토)
+        List<RepeatDay> repeatDays = List.of(RepeatDay.TUE, RepeatDay.THU, RepeatDay.SAT);
+
+        // when/then: [성공] 유효한 보호자 토큰으로 요청 시 200 OK
+        mockMvc.perform(put("/api/routines/{routineId}/repeats", routineId)
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(repeatDays)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].repeatDay").value("TUE"))
+                .andDo(print());
+
+        // when/then: [인증 실패] 토큰 없이 요청 시 401 Unauthorized
+        mockMvc.perform(put("/api/routines/{routineId}/repeats", routineId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(repeatDays)))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+    }
+
+    @DisplayName("[통합] 루틴 메모 업데이트 - 성공 및 인증 실패(401) 테스트")
+    @Test
+    void updateRoutineMemo_Success_And_Auth_Fail() throws Exception {
+        // given: 루틴 생성
+        RoutineRequest createRequest = createRoutineRequest("메모 업데이트 루틴");
+        String responseContent = mockMvc.perform(post("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Long routineId = objectMapper.readTree(responseContent).get("id").asLong();
+
+        // given: 업데이트 요청
+        String newMemo = "새로운 메모 내용입니다.";
+
+        // when/then: [성공] 유효한 보호자 토큰으로 요청 시 200 OK
+        mockMvc.perform(patch("/api/routines/{routineId}/memo", routineId)
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(newMemo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.guardianMemo").value(newMemo))
+                .andDo(print());
+
+        // when/then: [인증 실패] 토큰 없이 요청 시 401 Unauthorized
+        mockMvc.perform(patch("/api/routines/{routineId}/memo", routineId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(newMemo))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+    }
+
+    @DisplayName("[통합] 루틴 수행 체크 - 성공 및 인증 실패(401) 테스트")
+    @Test
+    void completeRoutine_Success_And_Auth_Fail() throws Exception {
+        // given: 루틴 생성
+        RoutineRequest createRequest = createRoutineRequest("완료할 루틴");
+        String responseContent = mockMvc.perform(post("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Long routineId = objectMapper.readTree(responseContent).get("id").asLong();
+
+        // 루틴 반복 요일 설정 (현재 요일로)
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        RepeatDay todayRepeatDay = RepeatDay.valueOf(today.name().substring(0, 3));
+        List<RepeatDay> repeatDays = Collections.singletonList(todayRepeatDay);
+
+        mockMvc.perform(put("/api/routines/{routineId}/repeats", routineId)
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(repeatDays)))
+                .andExpect(status().isOk());
+
+        // when/then: [성공] 유효한 피보호자 토큰으로 요청 시 200 OK
+        mockMvc.perform(post("/api/routines/{routineId}/complete", routineId)
+                        .header("Authorization", "Bearer " + dependentToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.routineId").value(routineId))
+                .andDo(print());
+
+        // when/then: [인증 실패] 토큰 없이 요청 시 401 Unauthorized
+        mockMvc.perform(post("/api/routines/{routineId}/complete", routineId))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
+    }
+
+    @DisplayName("[통합] 루틴 수행 체크 철회 - 성공 및 인증 실패(401) 테스트")
+    @Test
+    void undoCompleteRoutine_Success_And_Auth_Fail() throws Exception {
+        // given: 루틴 생성 및 완료
+        RoutineRequest createRequest = createRoutineRequest("철회할 루틴");
+        String routineResponseContent = mockMvc.perform(post("/api/routines/{dependentId}", dependent.getId())
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Long routineId = objectMapper.readTree(routineResponseContent).get("id").asLong();
+
+        // 루틴 반복 요일 설정 (현재 요일로)
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        RepeatDay todayRepeatDay = RepeatDay.valueOf(today.name().substring(0, 3));
+        List<RepeatDay> repeatDays = Collections.singletonList(todayRepeatDay);
+
+        mockMvc.perform(put("/api/routines/{routineId}/repeats", routineId)
+                        .header("Authorization", "Bearer " + guardianToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(repeatDays)))
+                .andExpect(status().isOk());
+
+        String historyResponseContent = mockMvc.perform(post("/api/routines/{routineId}/complete", routineId)
+                        .header("Authorization", "Bearer " + dependentToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        Long historyId = objectMapper.readTree(historyResponseContent).get("id").asLong();
+
+        // when/then: [성공] 유효한 피보호자 토큰으로 요청 시 200 OK
+        mockMvc.perform(patch("/api/routines/{historyId}/undo", historyId)
+                        .header("Authorization", "Bearer " + dependentToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value("해당 루틴 수행 기록을 취소했습니다."))
+                .andDo(print());
+
+        // when/then: [인증 실패] 토큰 없이 요청 시 401 Unauthorized
+        mockMvc.perform(patch("/api/routines/{historyId}/undo", historyId))
+                .andExpect(status().isUnauthorized())
+                .andDo(print());
     }
 }
