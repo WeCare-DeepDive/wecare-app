@@ -179,7 +179,7 @@ public class RoutineService {
         return RoutineDto.fromEntity(updatedRoutine);
     }
 
-    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
+    //@PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
     @Transactional
     public void deleteRoutine(Long routineId) {
         Routine routine = routineRepository.findById(routineId)
