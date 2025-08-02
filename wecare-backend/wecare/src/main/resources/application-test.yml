@@ -3,9 +3,9 @@ spring:
     hibernate:
       ddl-auto: create-drop # 테스트 시 테이블 자동 생성 및 삭제
   datasource:
-    url: jdbc:mysql://localhost:3306/wecare_db
-    username: root
-    password: dsa991006!
+    url: jdbc:mysql://localhost:3306/wecare_test
+    username: wecare_test
+    password: wecareTest
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
