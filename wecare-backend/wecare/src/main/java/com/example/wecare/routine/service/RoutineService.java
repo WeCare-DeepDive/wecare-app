@@ -57,9 +57,7 @@ public class RoutineService {
             RoutineHistory history = routineHistoryRepository.findByRoutineAndCompletedDate(routine, date)
                     .orElse(null);
             dtos.add(
-                    RoutineWithHistoryDto.builder()
-                            .history(RoutineHistoryDto.fromEntity(history))
-                            .build()
+                    RoutineWithHistoryDto.fromEntity(RoutineDto.fromEntity(routine), RoutineHistoryDto.fromEntity(history))
             );
         }
 
