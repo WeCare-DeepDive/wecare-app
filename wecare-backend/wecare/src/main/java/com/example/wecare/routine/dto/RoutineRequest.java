@@ -2,6 +2,7 @@ package com.example.wecare.routine.dto;
 
 
 import com.example.wecare.routine.code.NotificationType;
+import com.example.wecare.routine.code.RepeatDay;
 import com.example.wecare.routine.code.RoutineType;
 import com.example.wecare.routine.code.SoundType;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -11,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -34,6 +36,7 @@ public class RoutineRequest {
     private NotificationType notificationType;
     @NotNull(message = "알람 사운드의 형태는 필수입니다.")
     private SoundType soundType;
+    private List<RepeatDay> repeatDays;
 
     private String guardianMemo;
     private String dependentMemo;

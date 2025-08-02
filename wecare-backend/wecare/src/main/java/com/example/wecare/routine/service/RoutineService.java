@@ -111,6 +111,16 @@ public class RoutineService {
                 .build();
 
         Routine savedRoutine = routineRepository.save(routine);
+        List<RoutineRepeatDay> routineRepeatDays = new ArrayList<>();
+
+        for (RepeatDay repeatDay : request.getRepeatDays()) {
+            routineRepeatDays.add(RoutineRepeatDay.builder()
+                    .routine(routine)
+                    .repeatDay(repeatDay)
+                    .build());
+        }
+
+        routineRepeatDayRepository.saveAll(routineRepeatDays);
 
         RoutineAlert routineAlert = RoutineAlert.builder()
                 .routine(savedRoutine)
