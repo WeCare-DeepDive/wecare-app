@@ -1,7 +1,7 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: none #JPA를 통한 DDL 자동 생성 비활성화
+      ddl-auto: create-drop # 테스트 시 테이블 자동 생성 및 삭제
   datasource:
     url: jdbc:mysql://localhost:3306/wecare_db
     username: root

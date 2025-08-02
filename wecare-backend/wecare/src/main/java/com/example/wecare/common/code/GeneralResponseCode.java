@@ -18,6 +18,7 @@ public enum GeneralResponseCode implements ApiResponseCode {
     ROUTINE_NOT_FOUND(HttpStatus.NOT_FOUND, "루틴을 찾을 수 없습니다."),
     HISTORY_NOT_FOUND(HttpStatus.NOT_FOUND, "수행 기록을 찾을 수 없습니다."),
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "부적절한 접근입니다."),
+    FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "해당 리소스에 접근할 권한이 없습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에 알 수 없는 오류가 발생했습니다.");
 
     private final HttpStatus status;

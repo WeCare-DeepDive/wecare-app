@@ -9,6 +9,7 @@ import com.example.wecare.routine.service.RoutineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -78,7 +79,7 @@ public class RoutineController {
     @PostMapping("/{dependentId}")
     public ResponseEntity<RoutineDto> createRoutine(
             @PathVariable Long dependentId,
-            @RequestBody RoutineRequest request) {
+            @RequestBody @Valid RoutineRequest request) {
         return ResponseEntity.ok(routineService.createRoutine(dependentId, request));
     }
 
@@ -90,7 +91,7 @@ public class RoutineController {
     @PatchMapping("/{routineId}")
     public ResponseEntity<RoutineDto> updateRoutine(
             @PathVariable Long routineId,
-            @RequestBody RoutineRequest request) {
+            @RequestBody @Valid RoutineRequest request) {
         RoutineDto response = routineService.updateRoutine(routineId, request);
         return ResponseEntity.ok(response);
     }

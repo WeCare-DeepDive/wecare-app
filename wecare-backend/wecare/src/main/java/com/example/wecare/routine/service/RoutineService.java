@@ -18,6 +18,8 @@ import com.example.wecare.routine.repository.RoutineHistoryRepository;
 import com.example.wecare.routine.repository.RoutineRepeatDayRepository;
 import com.example.wecare.routine.repository.RoutineRepository;
 import lombok.RequiredArgsConstructor;
+import com.example.wecare.common.security.PartnerAccessHandler;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -77,7 +79,7 @@ public class RoutineService {
 
         Member currentMember = getCurrentMember();
         if (currentMember.getRole() != Role.GUARDIAN) {
-            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 등록은 보호자만 가능합니다.");
+            throw new ApiException(GeneralResponseCode.FORBIDDEN_ACCESS, "루틴 등록은 보호자만 가능합니다.");
         }
 
         validateRoutineRequest(request);
@@ -120,7 +122,7 @@ public class RoutineService {
 
         Member currentMember = getCurrentMember();
         if (currentMember.getRole() != Role.GUARDIAN) {
-            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 수정은 보호자만 가능합니다.");
+            throw new ApiException(GeneralResponseCode.FORBIDDEN_ACCESS, "루틴 수정은 보호자만 가능합니다.");
         }
 
         validateRoutineRequest(request);
@@ -164,7 +166,7 @@ public class RoutineService {
 
         Member currentMember = getCurrentMember();
         if (currentMember.getRole() != Role.GUARDIAN) {
-            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 수정은 보호자만 가능합니다.");
+            throw new ApiException(GeneralResponseCode.FORBIDDEN_ACCESS, "루틴 수정은 보호자만 가능합니다.");
         }
 
         routineRepository.delete(routine);
