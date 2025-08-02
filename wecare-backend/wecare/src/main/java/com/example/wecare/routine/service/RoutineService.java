@@ -39,7 +39,7 @@ public class RoutineService {
     private final RoutineHistoryRepository routineHistoryRepository;
     private final MemberRepository memberRepository;
 
-    @PreAuthorize("@dependentAccessHandler.ownershipCheck(#dependentId)")
+    //@PreAuthorize("@dependentAccessHandler.ownershipCheck(#dependentId)")
     @Transactional(readOnly = true)
     public List<RoutineWithHistoryDto> getRoutinesWithHistoryByDependentIdAndDate(Long dependentId, LocalDate date) {
 
@@ -66,7 +66,7 @@ public class RoutineService {
         return dtos;
     }
 
-    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
+    //@PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
     @Transactional(readOnly = true)
     public RoutineDetailDto getRoutineDetailByIdAndDate(Long routineId, LocalDate date) {
         Routine routine = routineRepository.findById(routineId)
