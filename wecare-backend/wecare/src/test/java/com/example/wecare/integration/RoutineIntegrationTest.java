@@ -18,8 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
 
@@ -38,6 +38,7 @@ import com.example.wecare.common.security.PartnerAccessHandler;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class RoutineIntegrationTest {
 
@@ -177,7 +178,7 @@ public class RoutineIntegrationTest {
                 .andDo(print());
     }
 
-    @DisplayName("[통합] 루틴 생성 - 인가 실패(403) 테스트")
+    @DisplayName("[통합] 루틴 생성 - 인가 실패(400) 테스트")
     @Test
     void createRoutine_Fail_By_Authorization() throws Exception {
         // given: 유효하지만 권한이 없는 '피보호자'의 토큰
@@ -189,7 +190,7 @@ public class RoutineIntegrationTest {
                         .header("Authorization", "Bearer " + dependentToken) // Note: Using dependent's token
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isBadRequest())
                 .andDo(print());
     }
 

@@ -79,7 +79,7 @@ public class RoutineService {
 
         Member currentMember = getCurrentMember();
         if (currentMember.getRole() != Role.GUARDIAN) {
-            throw new ApiException(GeneralResponseCode.FORBIDDEN_ACCESS, "루틴 등록은 보호자만 가능합니다.");
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 등록은 보호자만 가능합니다.");
         }
 
         validateRoutineRequest(request);
@@ -122,7 +122,7 @@ public class RoutineService {
 
         Member currentMember = getCurrentMember();
         if (currentMember.getRole() != Role.GUARDIAN) {
-            throw new ApiException(GeneralResponseCode.FORBIDDEN_ACCESS, "루틴 수정은 보호자만 가능합니다.");
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 수정은 보호자만 가능합니다.");
         }
 
         validateRoutineRequest(request);
@@ -166,7 +166,7 @@ public class RoutineService {
 
         Member currentMember = getCurrentMember();
         if (currentMember.getRole() != Role.GUARDIAN) {
-            throw new ApiException(GeneralResponseCode.FORBIDDEN_ACCESS, "루틴 수정은 보호자만 가능합니다.");
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "루틴 수정은 보호자만 가능합니다.");
         }
 
         routineRepository.delete(routine);
