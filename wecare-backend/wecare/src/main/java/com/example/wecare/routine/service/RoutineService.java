@@ -270,14 +270,15 @@ public class RoutineService {
         }
 
         LocalDateTime now = LocalDateTime.now();
+        System.out.println(now.toString());
 
         // 루틴 완료 가능한지 검증
         validateRoutineCompleting(routine);
 
         RoutineHistory todayHistory = RoutineHistory.builder()
                 .routine(routine)
-                .completedDate(LocalDate.now())
-                .completedTime(LocalTime.now())
+                .completedDate(now.toLocalDate())
+                .completedTime(now.toLocalTime())
                 .build();
 
         // 루틴 시간이 지났는지 확인 (종료 시간이 설정된 경우에만)
