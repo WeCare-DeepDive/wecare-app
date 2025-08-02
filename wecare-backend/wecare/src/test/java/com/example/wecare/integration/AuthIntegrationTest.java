@@ -1,4 +1,4 @@
-package com.example.wecare.integration.security;
+package com.example.wecare.integration;
 
 import com.example.wecare.auth.dto.LoginRequest;
 import com.example.wecare.auth.dto.LoginResponse;

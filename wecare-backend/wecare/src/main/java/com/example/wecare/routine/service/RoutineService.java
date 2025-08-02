@@ -6,7 +6,6 @@ import com.example.wecare.common.exception.ApiException;
 import com.example.wecare.member.code.Role;
 import com.example.wecare.member.domain.Member;
 import com.example.wecare.member.repository.MemberRepository;
-import com.example.wecare.routine.code.HistoryStatus;
 import com.example.wecare.routine.code.RepeatDay;
 import com.example.wecare.routine.domain.Routine;
 import com.example.wecare.routine.domain.RoutineAlert;
@@ -40,9 +39,10 @@ public class RoutineService {
     private final RoutineHistoryRepository routineHistoryRepository;
     private final MemberRepository memberRepository;
 
-    @Transactional(readOnly = true)
     @PreAuthorize("@dependentAccessHandler.ownershipCheck(#dependentId)")
-    public List<RoutineDto> getRoutinesByDependentId(Long dependentId) {
+    @Transactional(readOnly = true)
+    public List<RoutineWithHistoryDto> getRoutinesWithHistoryByDependentIdAndDate(Long dependentId, LocalDate date) {
+
         Member dependent = memberRepository.findById(dependentId)
                 .orElseThrow(() -> new ApiException(AuthResponseCode.MEMBER_NOT_FOUND));
 
@@ -52,17 +52,35 @@ public class RoutineService {
 
         // 루틴과 루틴 알람 조합하여 DTO 변환하여 반환
         List<Routine> routines = routineRepository.findAllByDependent(dependent);
-        List<RoutineDto> routineDtos = new ArrayList<>();
+        List<RoutineWithHistoryDto> dtos = new ArrayList<>();
         for (Routine routine : routines) {
-            RoutineAlert alert = routineAlertRepository.findByRoutine((routine))
-                    .orElseThrow(() -> new ApiException(GeneralResponseCode.INTERNAL_SERVER_ERROR, "알람 정보를 찾을 수 없습니다."));
-            routineDtos.add(RoutineDto.fromEntity(
-                    routine,
-                    RoutineAlertDto.fromEntity(alert)
-            ));
+            RoutineHistory history = routineHistoryRepository.findByRoutineAndCompletedDate(routine, date)
+                    .orElse(null);
+            dtos.add(
+                    RoutineWithHistoryDto.builder()
+                            .history(RoutineHistoryDto.fromEntity(history))
+                            .build()
+            );
         }
 
-        return routineDtos;
+        return dtos;
+    }
+
+    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
+    @Transactional(readOnly = true)
+    public RoutineDetailDto getRoutineDetailByIdAndDate(Long routineId, LocalDate date) {
+        Routine routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
+
+        List<RoutineRepeatDay> repeats = routineRepeatDayRepository.findAllByRoutine(routine);
+        RoutineHistory history = routineHistoryRepository.findByRoutineAndCompletedDate(routine, date)
+                .orElse(null);
+
+        return RoutineDetailDto.fromRoutineDto(
+                RoutineDto.fromEntity(routine),
+                repeats.stream().map(RoutineRepeatDayDto::fromEntity).toList(),
+                RoutineHistoryDto.fromEntity(history)
+        );
     }
 
     @Transactional
@@ -93,6 +111,16 @@ public class RoutineService {
                 .build();
 
         Routine savedRoutine = routineRepository.save(routine);
+        List<RoutineRepeatDay> routineRepeatDays = new ArrayList<>();
+
+        for (RepeatDay repeatDay : request.getRepeatDays()) {
+            routineRepeatDays.add(RoutineRepeatDay.builder()
+                    .routine(routine)
+                    .repeatDay(repeatDay)
+                    .build());
+        }
+
+        routineRepeatDayRepository.saveAll(routineRepeatDays);
 
         RoutineAlert routineAlert = RoutineAlert.builder()
                 .routine(savedRoutine)
@@ -101,12 +129,9 @@ public class RoutineService {
                 .soundType(request.getSoundType())
                 .build();
 
-        RoutineAlert savedRoutineAlert = routineAlertRepository.save(routineAlert);
+        routineAlertRepository.save(routineAlert);
 
-        return RoutineDto.fromEntity(
-                savedRoutine,
-                RoutineAlertDto.fromEntity(savedRoutineAlert)
-        );
+        return RoutineDto.fromEntity(savedRoutine);
     }
 
     @Transactional
@@ -149,11 +174,11 @@ public class RoutineService {
         alert.setNotificationType(request.getNotificationType());
         alert.setSoundType(request.getSoundType());
 
-        alert = routineAlertRepository.save(alert);
+        routineAlertRepository.save(alert);
 
         Routine updatedRoutine = routineRepository.save(routine);
 
-        return RoutineDto.fromEntity(updatedRoutine, RoutineAlertDto.fromEntity(alert));
+        return RoutineDto.fromEntity(updatedRoutine);
     }
 
     @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
@@ -227,38 +252,10 @@ public class RoutineService {
 
         routine = routineRepository.save(routine);
 
-        RoutineAlert alert = routineAlertRepository.findByRoutine(routine)
+        routineAlertRepository.findByRoutine(routine)
                 .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
 
-        return RoutineDto.fromEntity(routine, RoutineAlertDto.fromEntity(alert));
-    }
-
-    @PreAuthorize("@partnerAccessHandler.ownershipCheck(#memberId)")
-    @Transactional(readOnly = true)
-    public List<RoutineHistoryDto> getHistoriesByMemberId(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ApiException(AuthResponseCode.MEMBER_NOT_FOUND));
-
-        Member currentMember = getCurrentMember();
-
-        if (currentMember.getRole() != Role.DEPENDENT) {
-            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "피보호자의 루틴에만 접근할 수 있습니다.");
-        }
-
-        List<RoutineHistory> histories = routineHistoryRepository.findByRoutine_Dependent(member);
-
-        return histories.stream().map(RoutineHistoryDto::fromEntity).toList();
-    }
-
-    @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
-    @Transactional(readOnly = true)
-    public List<RoutineHistoryDto> getHistoriesByRoutineId(Long routineId) {
-        Routine routine = routineRepository.findById(routineId)
-                .orElseThrow(() -> new ApiException(GeneralResponseCode.ROUTINE_NOT_FOUND));
-
-        List<RoutineHistory> histories = routineHistoryRepository.findByRoutine(routine);
-
-        return histories.stream().map(RoutineHistoryDto::fromEntity).toList();
+        return RoutineDto.fromEntity(routine);
     }
 
     @PreAuthorize("@routineAccessHandler.ownershipCheck(#routineId)")
@@ -283,13 +280,11 @@ public class RoutineService {
                 .routine(routine)
                 .completedDate(LocalDate.now())
                 .completedTime(LocalTime.now())
-                .status(HistoryStatus.COMPLETED)
                 .build();
 
         // 루틴 시간이 지났는지 확인 (종료 시간이 설정된 경우에만)
         if (routine.getEndTime() != null && now.toLocalTime().isAfter(routine.getEndTime())) {
-            //루틴 시간이 지났을 경우 실패로 처리
-            todayHistory.setStatus(HistoryStatus.FAILED);
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "현재 루틴 수행 기록을 수정할 수 없습니다.");
         }
 
         todayHistory = routineHistoryRepository.save(todayHistory);

@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface RoutineHistoryRepository extends JpaRepository<RoutineHistory, Long> {
     Optional<RoutineHistory> findByRoutineAndCompletedDate(Routine routine, LocalDate completedDate);
 
-    List<RoutineHistory> findByRoutine_Dependent(Member routineDependent);
+    List<RoutineHistory> findAllByRoutine_Dependent(Member routineDependent);
 
-    List<RoutineHistory> findByRoutine(Routine routine);
+    List<RoutineHistory> findAllByRoutine(Routine routine);
 }
