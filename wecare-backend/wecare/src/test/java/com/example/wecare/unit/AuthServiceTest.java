@@ -1,4 +1,4 @@
-package com.example.wecare.unit.service;
+package com.example.wecare.unit;
 
 import com.example.wecare.auth.dto.LoginRequest;
 import com.example.wecare.auth.dto.LoginResponse;
