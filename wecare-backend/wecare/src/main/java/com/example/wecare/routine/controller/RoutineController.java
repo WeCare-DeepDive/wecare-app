@@ -27,7 +27,7 @@ public class RoutineController {
             description = "피보호자 본인 또는 연결된 보호자만 피보호자의 식별자를 통해 접근 가능",
             security = @SecurityRequirement(name = "Authorization")
     )
-    @GetMapping("/{dependentId}")
+    @GetMapping("/{dependentId}/repeats")
     public ResponseEntity<List<RoutineDto>> getRoutinesByDependentId(
             @PathVariable Long dependentId
     ) {
@@ -113,7 +113,7 @@ public class RoutineController {
             description = "수정 사항을 원본에 덮어쓰기 방식으로 업데이트",
             security = @SecurityRequirement(name = "Authorization")
     )
-    @PutMapping("/{routineId}/repeat")
+    @PutMapping("/{routineId}/repeats")
     public ResponseEntity<List<RoutineRepeatDayDto>> updateRoutineRepeat(
             @PathVariable Long routineId,
             @RequestBody List<RepeatDay> requests
