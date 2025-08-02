@@ -1,8 +1,10 @@
 package com.example.wecare.connection.service;
 
+import com.example.wecare.common.code.AuthResponseCode;
 import com.example.wecare.common.code.GeneralResponseCode;
 import com.example.wecare.common.exception.ApiException;
 import com.example.wecare.connection.domain.Connection;
+import com.example.wecare.connection.dto.ConnectionDetailDto;
 import com.example.wecare.connection.dto.ConnectionDto;
 import com.example.wecare.connection.dto.UpdateRelationshipRequest;
 import com.example.wecare.connection.repository.ConnectionRepository;
@@ -17,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -41,6 +44,29 @@ public class ConnectionService {
         // DB 제약조건에 사용자 외래키 on delete cascade 적용되어 있으므로 별도 검증 과정 필요 없음
 
         return connections.stream().map(ConnectionDto::fromEntity).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ConnectionDetailDto> getMyDetailConnections() {
+        Member currentMember = getCurrentMember();
+
+        List<ConnectionDto> connections = getMyConnections();
+        List<ConnectionDetailDto> detailConnections = new ArrayList<>();
+        for(ConnectionDto connectionDto : connections) {
+            Member partner;
+            if(currentMember.getRole() == Role.GUARDIAN) {
+                partner = memberRepository.findById(connectionDto.getDependentId())
+                        .orElseThrow(() -> new ApiException(AuthResponseCode.MEMBER_NOT_FOUND));
+            } else {
+                partner = memberRepository.findById(connectionDto.getGuardianId())
+                        .orElseThrow(() -> new ApiException(AuthResponseCode.MEMBER_NOT_FOUND));
+            }
+            detailConnections.add(
+                    ConnectionDetailDto.fromConnectionDto(connectionDto, partner)
+            );
+        }
+
+        return detailConnections;
     }
 
     @PreAuthorize("@connectionAccessHandler.ownershipCheck(#connectionId)")

@@ -1,5 +1,6 @@
 package com.example.wecare.connection.controller;
 
+import com.example.wecare.connection.dto.ConnectionDetailDto;
 import com.example.wecare.connection.dto.ConnectionDto;
 import com.example.wecare.connection.dto.UpdateRelationshipRequest;
 import com.example.wecare.connection.service.ConnectionService;
@@ -28,6 +29,16 @@ public class ConnectionController {
     @GetMapping("")
     public ResponseEntity<List<ConnectionDto>> getMyConnections() {
         return ResponseEntity.ok(connectionService.getMyConnections());
+    }
+
+    @Operation(
+            summary = "내 연결 세부 정보 리스트 조회",
+            description = "상대방의 이름 필드 포함",
+            security = @SecurityRequirement(name = "Authorization")
+    )
+    @GetMapping("/details")
+    public ResponseEntity<List<ConnectionDetailDto>> getMyDetailConnections() {
+        return ResponseEntity.ok(connectionService.getMyDetailConnections());
     }
 
     @Operation(
