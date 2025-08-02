@@ -1,6 +1,6 @@
 spring:
-#  profiles:
-#    active: dev
+  profiles:
+    active: dev
   application:
     name: wecare
   jpa:
@@ -10,6 +10,9 @@ spring:
         highlight_sql: true
         use_sql_comments: true
         format_sql: true
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 server:
