@@ -20,7 +20,7 @@ import java.time.LocalTime;
 public class RoutineRequest {
     @NotNull(message = "시작 시간은 필수입니다.")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
-    @Schema(type = "string", pattern = "HH:mm:ss", example = "14:30:00")
+    @Schema(type = "string", pattern = "HH:mm:ss", example = "14:30:00")    
     private LocalTime startTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     @Schema(type = "string", pattern = "HH:mm:ss", example = "14:30:00")
