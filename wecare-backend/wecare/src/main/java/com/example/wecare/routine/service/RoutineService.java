@@ -274,7 +274,8 @@ public class RoutineService {
 
         // 루틴 시간이 지났는지 확인 (종료 시간이 설정된 경우에만)
         if (routine.getEndTime() != null && now.toLocalTime().isAfter(routine.getEndTime())) {
-            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "현재 루틴 수행 기록을 수정할 수 없습니다.");
+            throw new ApiException(GeneralResponseCode.INVALID_REQUEST, "현재 루틴 수행 기록을 수정할 수 없습니다. " +
+                    now.toLocalTime() + ", " + routine.getEndTime());
         }
 
         todayHistory = routineHistoryRepository.save(todayHistory);
