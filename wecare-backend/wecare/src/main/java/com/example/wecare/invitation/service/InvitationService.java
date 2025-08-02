@@ -50,7 +50,7 @@ public class InvitationService {
 
         // 역할 관계 정의
         Member guardian = inviter.getRole() == Role.GUARDIAN ? inviter : invitee;
-        Member dependent = inviter.getRole() == Role.DEPENDENT ? invitee : inviter;
+        Member dependent = invitee.getRole() == Role.DEPENDENT ? invitee : inviter;
 
         Connection connection = connectionRepository.findByGuardianAndDependent(guardian, dependent)
                 .orElse(
@@ -96,7 +96,7 @@ public class InvitationService {
         }
 
         Member guardian = inviter.getRole() == Role.GUARDIAN ? inviter : invitee;
-        Member dependent = inviter.getRole() == Role.DEPENDENT ? invitee : inviter;
+        Member dependent = invitee.getRole() == Role.DEPENDENT ? invitee : inviter;
 
         // 중복된 연결 검증
         if (connectionRepository.existsByGuardianIdAndDependentIdAndActiveTrue(guardian.getId(), dependent.getId())) {
