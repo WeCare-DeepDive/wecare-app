@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS routine_alerts (
 -- 6. 루틴 실행 로그
 CREATE TABLE IF NOT EXISTS routine_histories (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    routine_id BIGINT PRIMARY KEY,
+    routine_id BIGINT,
     completed_date DATE NOT NULL,
     completed_time TIME NOT NULL,
 
