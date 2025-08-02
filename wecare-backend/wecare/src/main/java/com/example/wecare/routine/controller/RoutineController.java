@@ -28,7 +28,7 @@ public class RoutineController {
             description = "피보호자 본인 또는 연결된 보호자만 피보호자의 식별자를 통해 접근 가능",
             security = @SecurityRequirement(name = "Authorization")
     )
-    @GetMapping("/{dependentId}/repeats")
+    @GetMapping("/{dependentId}")
     public ResponseEntity<List<RoutineDto>> getRoutinesByDependentId(
             @PathVariable Long dependentId
     ) {
@@ -40,7 +40,7 @@ public class RoutineController {
             description = "피보호자 본인 또는 연결된 보호자만 루틴의 식별자를 통해 접근 가능",
             security = @SecurityRequirement(name = "Authorization")
     )
-    @GetMapping("/{routineId}/repeat")
+    @GetMapping("/{routineId}/repeats")
     public ResponseEntity<List<RoutineRepeatDayDto>> getRepeatDaysByRoutineId(
             @PathVariable Long routineId
     ) {
