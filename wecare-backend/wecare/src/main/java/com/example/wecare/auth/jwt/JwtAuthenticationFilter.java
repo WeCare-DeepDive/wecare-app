@@ -31,15 +31,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // JWT 파싱
-        String authHeader = request.getHeader("Authorization");
+        String token = resolveToken(request);
 
         // 헤더 포함 안된 요청의 경우 Request를 다음 필터로 넘김
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (token != null && !jwtUtil.validateToken(token)) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        String token = authHeader.substring(7); // "Bearer " 제거
 
         try{
             if (!jwtUtil.validateToken(token) ||
@@ -65,5 +63,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
         filterChain.doFilter(request, response);
+    }
+    
+    private String resolveToken(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (bearer != null && bearer.startsWith("Bearer ")) {
+            return bearer.substring(7);
+        }
+        return null;
     }
 }
