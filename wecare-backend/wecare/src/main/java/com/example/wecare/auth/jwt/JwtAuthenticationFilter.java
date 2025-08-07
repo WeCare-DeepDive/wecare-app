@@ -34,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         // 헤더 포함 안된 요청의 경우 Request를 다음 필터로 넘김
-        if (token != null && !jwtUtil.validateToken(token)) {
+        if (token == null && !jwtUtil.validateToken(token)) {
             filterChain.doFilter(request, response);
             return;
         }
